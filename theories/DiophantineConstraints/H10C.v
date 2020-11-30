@@ -52,3 +52,20 @@ Definition h10uc_sem φ (c : h10uc) :=
     given a list of uniform Diophantine constraints, is there a valuation that satisfies each constraint?
 *)
 Definition H10UC_SAT (cs: list h10uc) := exists (φ: nat -> nat), forall c, In c cs -> h10uc_sem φ c.
+
+(** Diophantine constraints with squares (h10cs) are of three shapes:
+      x = 1 | x + y = z | x * x = z with x, y, z in nat
+ *)
+Inductive h10sc : Set :=
+  | h10sc_one : nat -> h10sc
+  | h10sc_plus : nat -> nat -> nat -> h10sc
+  | h10sc_sqr : nat -> nat -> h10sc.
+
+Definition h10sc_sem phi c :=
+  match c with
+    | h10sc_one x => phi x = 1
+    | h10sc_plus x y z => phi x + phi y = phi z
+    | h10sc_sqr x y => phi x * phi x = phi y
+  end.
+
+Definition H10SC_SAT (cs: list h10sc) := exists (phi: nat -> nat), forall c, In c cs -> h10sc_sem phi c.

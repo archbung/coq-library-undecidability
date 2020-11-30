@@ -18,7 +18,7 @@ Require Import Undecidability.Synthetic.Undecidability.
 Require Import Undecidability.DiophantineConstraints.H10C.
 
 From Undecidability.DiophantineConstraints.Reductions Require
-  H10C_SAT_to_H10UC_SAT FRACTRAN_to_H10C_SAT.
+  H10C_SAT_to_H10UC_SAT H10C_SAT_to_H10SC_SAT FRACTRAN_to_H10C_SAT.
 
 From Undecidability.FRACTRAN Require Import FRACTRAN FRACTRAN_undec.
 
@@ -41,3 +41,9 @@ Proof.
 Qed.
 
 Check H10UC_SAT_undec.
+
+Theorem H10SC_SAT_undec : undecidable H10SC_SAT.
+Proof.
+  apply (undecidability_from_reducibility H10C_SAT_undec).
+  exact H10C_SAT_to_H10SC_SAT.reduction.
+Qed.
