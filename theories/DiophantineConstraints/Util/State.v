@@ -1,5 +1,9 @@
-Require Import Undecidability.DiophantineConstraints.Util.Class.
+Require Import Undecidability.DiophantineConstraints.Util.Classes.
 Require Import FunctionalExtensionality.
+Require Import List.
+Require Import Datatypes.
+Require Import Basics.
+Import ListNotations.
 
 Definition State (S A : Type) := S -> A * S.
 
@@ -35,3 +39,9 @@ Proof.
   all: intros; apply functional_extensionality; intros; try now destruct (m x).
   reflexivity.
 Defined.
+
+Definition liftA2 {F} `{Applicative F} {A B C : Type} (f : A -> B -> C) (x : F A) :=
+  splat (fmap f x).
+
+Definition traverse {F} `{Applicative F} {A B : Type} (f : A -> F B) :=
+  fold_right (fun x ys => liftA2 (fun c cs => c :: cs) (f x) ys) (pure []).
