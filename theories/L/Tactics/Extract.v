@@ -1,16 +1,19 @@
 From Undecidability.L Require Import Util.L_facts Prelim.StringBase.
-From MetaCoq Require Import Template.All Checker.Checker.
+From MetaCoq Require Import Template.All Template.Checker.
 Require Import Undecidability.Shared.Libs.PSL.Base. 
 Require Import String Ascii.
 
 Open Scope string_scope.
 Import MonadNotation.
-(** ** Extraction *)
+
+Unset Universe Minimization ToSet.
+
+(* ** Extraction *)
 
 (* Global definition of fuel for step-indexed computations *)
 Notation FUEL := 1000.
 
-(** Auxiliary functions *)
+(* Auxiliary functions *)
 Definition string_of_int n :=
   match n with
   | 0 => "0"
@@ -39,24 +42,24 @@ Section it_i.
   Definition it_i := it_i' 0.
 End it_i.
 
-(**  apply all functions in a list of functions from right to left *)
+(*  apply all functions in a list of functions from right to left *)
 Definition stack {X : Type} (l : list (X -> X)) (x : X) := fold_right (fun f x => f x) x l.
 
-(**  Auxiliary monadic functions *)
+(*  Auxiliary monadic functions *)
 
-(** Get the head of a list *)
+(* Get the head of a list *)
 Definition hd {X : Type} (l : list X) : TemplateMonad X :=
   match l with
   | nil => tmFail "hd: empty list"
   | x :: _ => ret x
   end.
 
-(** Get the type of a quoted term *)
+(* Get the type of a quoted term *)
 Definition tmTypeOf (s : Ast.term) :=
   u <- tmUnquote s ;;
     tmEval hnf (my_projT1 u) >>= tmQuote.
 
-(** Try to infer instance, otherwise make lemma *)
+(* Try to infer instance, otherwise make lemma *)
 Definition tmTryInfer (n : ident) (red : option reductionStrategy) (A : Type) : TemplateMonad A :=
   r <- tmInferInstance red A ;;
     match r with
@@ -73,7 +76,7 @@ Definition tmTryInfer (n : ident) (red : option reductionStrategy) (A : Type) : 
          tmLemma n A
     end.
 
-(** Generate a name for a quoted term *)
+(* Generate a name for a quoted term *)
 Definition name_of (t : Ast.term) : ident :=
   match t with
     tConst (modp, n) _ => name_after_dot n
@@ -107,7 +110,7 @@ Definition name_of (t : Ast.term) : ident :=
 (*   | x => x *)
 (*   end. *)
 
-(** Check whether a list of quoted terms starts with a type *)
+(* Check whether a list of quoted terms starts with a type *)
 Fixpoint tmIsType (s : Ast.term) : TemplateMonad bool :=
   match s with
   | tInd _ _ => ret true
@@ -117,7 +120,7 @@ Fixpoint tmIsType (s : Ast.term) : TemplateMonad bool :=
   | _ => ret false
   end.
 
-(** Get the number of constructors for an inductive type *)
+(* Get the number of constructors for an inductive type *)
 Definition tmNumConstructors (n : kername) : TemplateMonad nat :=
   i <- tmQuoteInductive n ;;
     match ind_bodies i with
@@ -125,14 +128,14 @@ Definition tmNumConstructors (n : kername) : TemplateMonad nat :=
     | _ => tmFail "Mutual inductive types are not supported"
     end.
 
-(** Get all argument types for a type *)
+(* Get all argument types for a type *)
 Fixpoint argument_types (B : Ast.term) :=
   match B with
   | tProd _ A B => A :: argument_types B
   | _ => []
   end.
 
-(** Split an inductive types applied to parameters into the naked inductive, the number of parameters and the list of parameters *)
+(* Split an inductive types applied to parameters into the naked inductive, the number of parameters and the list of parameters *)
 Definition split_head_symbol A : option (inductive * list term) :=
   match A with
   | tApp (tInd ind u) R => ret (ind, R)
@@ -140,7 +143,7 @@ Definition split_head_symbol A : option (inductive * list term) :=
   | _ => None
   end.
 
-(** Get the list of consturcors for an inductive type (name, quoted term, number of arguments) *)
+(* Get the list of consturcors for an inductive type (name, quoted term, number of arguments) *)
 Definition list_constructors (ind : inductive) : TemplateMonad (list (ident * term * nat)) :=
   A <- tmQuoteInductive (inductive_mind ind) ;;
     match ind_bodies A with
@@ -148,28 +151,28 @@ Definition list_constructors (ind : inductive) : TemplateMonad (list (ident * te
     | _ => tmFail "error: no mutual inductives supported"
     end.
 
-(** determine whether two inductives are equal, based on their name *)
+(* determine whether two inductives are equal, based on their name *)
 Definition eq_inductive (hs hs2 : inductive) :=
   match hs, hs2 with
   | mkInd k _, mkInd k2 _ => if kername_eq_dec k k2 then true else false
   end.
 
-(** Get the argument types for a constructor (specified by inductive and index) *)
+(* Get the argument types for a constructor (specified by inductive and index) *)
 Definition tmArgsOfConstructor ind i :=
   A <- tmTypeOf (tConstruct ind i []) ;;
   ret (argument_types A).
 
 
-(**  Classes for computable terms and (Scott-) encodable types *)
+(*  Classes for computable terms and (Scott-) encodable types *)
 
 Class extracted {A : Type} (a : A) := int_ext : L.term.
 Arguments int_ext {_} _ {_}.
 Typeclasses Transparent extracted. (* This is crucial to use this inside monads  *)
-Hint Extern 0 (extracted _) => progress (cbn [Common.my_projT1]): typeclass_instances. 
+#[export] Hint Extern 0 (extracted _) => progress (cbn [Common.my_projT1]): typeclass_instances. 
 
 Class encodable (A : Type) := enc_f : A -> L.term.  
 
-(** Construct quoted L terms and natural numbers *)
+(* Construct quoted L terms and natural numbers *)
 
 MetaCoq Quote Definition tTerm := L.term.
 
@@ -190,7 +193,7 @@ Fixpoint mkNat n := match n with
                    | S n => tApp mkSucc [mkNat n]
                    end.
 
-(** *** Generation of Scott encodings *)
+(* *** Generation of Scott encodings *)
 
 Fixpoint insert_params fuel Params i t :=
   let params := List.length Params in
@@ -217,6 +220,9 @@ Definition tmGetMyOption {X} (o : option_instance X) (err : string) : TemplateMo
   | my_None => tmFail err
   end.
 
+Definition naNamed n := {| binder_name := nNamed n; binder_relevance := Relevant |}.
+Definition naAnon := {| binder_name := nAnon; binder_relevance := Relevant |}.
+
 Definition mkFixMatch (f x : ident) (t1 t2 : Ast.term) (cases : nat -> list term -> TemplateMonad term) :=
   hs_num <- tmGetOption (split_head_symbol t1) "no head symbol found";;
   let '(ind, Params) := hs_num in
@@ -228,10 +234,10 @@ Definition mkFixMatch (f x : ident) (t1 t2 : Ast.term) (cases : nat -> list term
                           t <- cases i l' ;; ret (args, t)) L ;; 
   ret (Ast.tFix [BasicAst.mkdef 
                    Ast.term
-                   (nNamed f)
-                   (tProd nAnon t1 t2)
-                   (tLambda (nNamed x) t1 (tCase (ind, params)
-                                                (tLambda nAnon t1 t2)
+                   (naNamed f)
+                   (tProd naAnon t1 t2)
+                   (tLambda (naNamed x) t1 (tCase ((ind, params), Relevant)
+                                                (tLambda naAnon t1 t2)
                                                 (tRel 0)
                                                 body)) 0] 0).
 
@@ -269,14 +275,14 @@ Definition tmEncode (name : string) (A : Type) :=
            (fun i (* ctr index *) ctr_types (* ctr type *) => 
               args <- tmEval cbv (|ctr_types|);; 
               C <- monad_map_i (encode_arguments t args) ctr_types ;; 
-              ret (stack (map (tLambda (nAnon)) ctr_types)
+              ret (stack (map (tLambda (naAnon)) ctr_types)
                                (it mkLam num ((fun s => mkAppList s C) (mkVar (mkNat (num - i - 1))))))
            ) ;;
   u <- tmUnquoteTyped (encodable A) ter;; 
  tmInstanceRed name None u;;
  tmEval hnf u.
 
-(** **** Examples *)
+(* **** Examples *)
 (* Commented out for less printing while compiling *)
 
 (* MetaCoq Run (tmEncode "unit_encode" unit >>= tmPrint). *)
@@ -305,7 +311,7 @@ Definition tmEncode (name : string) (A : Type) :=
 
 (* End encode. *)
 
-(** *** Generation of constructors *)
+(* *** Generation of constructors *)
 
 Definition gen_constructor args num i  := 
   it lam args (it lam num (it_i (fun n s => L.app s #(n + num)) args (var (num - i - 1)))).
@@ -334,7 +340,7 @@ Definition tmExtractConstr' (def : option ident) {A : Type} (a : A) :=
 Definition tmExtractConstr (def : ident) {A : Type} (a : A) :=
   tmExtractConstr' (Some def) a.
 
-(** **** Examples *)
+(* **** Examples *)
 (* Commented out for less printing while compiling *)
 
 (* Section Fix_X. *)
@@ -351,7 +357,7 @@ Definition tmExtractConstr (def : ident) {A : Type} (a : A) :=
   
 (* End Fix_X. *)
 
-(** *** Extracting terms from Coq to L *)
+(* *** Extracting terms from Coq to L *)
 
 Notation "↑ env" := (fun n => match n with 0 => 0 | S n => S (env n) end) (at level 10).
 (*
@@ -506,6 +512,8 @@ Fixpoint extract (env : nat -> nat) (s : Ast.term) (fuel : nat) : TemplateMonad 
   | tInd a _ =>  tmPrint a;;tmFail "tInd is not supported (probably there is a type not in prenex-normal form)" 
   | tProj _ _ =>   tmFail "tProj is not supported"
   | tCoFix _ _ =>  tmFail "tCoFix is not supported"
+  | tInt _ =>  tmFail "tInt is not supported"
+  | tFloat _ =>  tmFail "tFloat is not supported"
   end end.
 
 Fixpoint head_of_const (t : term) :=
@@ -534,7 +542,7 @@ Polymorphic Definition tmExtract (nm : option string) {A} (a : A) : TemplateMona
 
 Opaque extracted.
 
-(** **** Examples *)
+(* **** Examples *)
 (* Commented out for less printing while compiling *)
 
 (* Fixpoint ackermann n : nat -> nat := *)

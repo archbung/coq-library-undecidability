@@ -1,8 +1,8 @@
-(** * Definition of Multi-Tape Turing Machines *)
+(* * Definition of Multi-Tape Turing Machines *)
 
-(** Definitions of tapes and (unlabelled) multi-tape Turing machines from Asperti, Riciotti "A formalization of multi-tape Turing machines" (2015) and the accompanying Matita code. *)
+(* Definitions of tapes and (unlabelled) multi-tape Turing machines from Asperti, Riciotti "A formalization of multi-tape Turing machines" (2015) and the accompanying Matita code. *)
 
-From Undecidability Require Export TM.Util.Prelim TM.Util.Relations.
+From Undecidability.TM.Util Require Export Prelim Relations.
 Require Import Undecidability.Shared.Libs.PSL.Vectors.Vectors.
 Require Export Undecidability.TM.TM.
        
@@ -12,11 +12,11 @@ Section Fix_Sigma.
 
   Notation tape := (tape sig).
 
-  (** ** Definition of the tape *)
+  (* ** Definition of the tape *)
   
-  (** A tape is essentially a triple 〈left,current,right〉 where, however, the current symbol could be missing. This may happen for three different reasons: both tapes are empty, we are on the left extremity of a non-empty tape (left overflow), or we are on the right extremity of a non-empty tape (right overflow). *)
+  (* A tape is essentially a triple 〈left,current,right〉 where, however, the current symbol could be missing. This may happen for three different reasons: both tapes are empty, we are on the left extremity of a non-empty tape (left overflow), or we are on the right extremity of a non-empty tape (right overflow). *)
 
-  (** Note that the alphabet has type [Type], not [finType]. *)
+  (* Note that the alphabet has type [Type], not [finType]. *)
   (* Print tape. *)
 
   Definition tapes n := Vector.t tape n.
@@ -52,7 +52,7 @@ Section Fix_Sigma.
       | midtape _ _ r => r
       end.
 
-  (** Lemmas for [midtape] *)
+  (* Lemmas for [midtape] *)
   Lemma tape_midtape_current_right t rs s :
     current t = Some s ->
     right t = rs ->
@@ -73,24 +73,24 @@ Section Fix_Sigma.
   Proof. destruct t; cbn; congruence. Qed.
   
   
-  (** ** Definition of moves *)
+  (* ** Definition of moves *)
   
   (* Print move.  *)
 
-  (** Declare discreteness of [move] *)
+  (* Declare discreteness of [move] *)
   Global Instance move_eq_dec : eq_dec move.
   Proof.
     intros. hnf. decide equality.
-  Defined.
+  Defined. (* because definition *)
 
-  (** Declare finiteness of [move] *)
+  (* Declare finiteness of [move] *)
   Global Instance move_finC : finTypeC (EqType move).
   Proof.
     apply (FinTypeC (enum := [Lmove; Rmove; Nmove])).
     intros []; now cbv.
-  Defined.
+  Defined. (* because definition *)
 
-  (** We outsource the second [match] of [tape_move_right] in the [midtape] case to another named definition. This has the advantage that the [cbn] tactic will not reduce [tape_move_left (midtape ls m rs)] to a long term that contains [match]. It reduces to [tape_move_left' ls m rs] instead. Furthermore, there are rewrite lemmas available for [tape_move_left']. *)
+  (* We outsource the second [match] of [tape_move_right] in the [midtape] case to another named definition. This has the advantage that the [cbn] tactic will not reduce [tape_move_left (midtape ls m rs)] to a long term that contains [match]. It reduces to [tape_move_left' ls m rs] instead. Furthermore, there are rewrite lemmas available for [tape_move_left']. *)
 
   Definition tape_move_right' ls a rs : tape :=
     match rs with
@@ -131,7 +131,7 @@ Section Fix_Sigma.
     | Nmove => t
     end.
 
-  (** *** Rewriting Lemmas *)
+  (* *** Rewriting Lemmas *)
 
   Lemma tapeToList_move (t : tape) (D : move) :
     tapeToList (tape_move t D) = tapeToList t.
@@ -164,40 +164,40 @@ Section Fix_Sigma.
   Qed.
 
 
-  (** ** Machine step *)
+  (* ** Machine step *)
 
-  (** Writing on the tape *)
+  (* Writing on the tape *)
   Definition tape_write (t : tape) (s : option sig) :=
     match s with 
     | None => t
     | Some s' => midtape (left t) s' (right t)
     end.
 
-  (** A single step of the machine *)
+  (* A single step of the machine *)
   Definition doAct (t : tape) (mv : option sig * move) :=
     tape_move (tape_write t (fst mv)) (snd mv).
 
-  (** One step on each tape *)
+  (* One step on each tape *)
   Definition doAct_multi (n : nat) (ts : tapes n) (actions : Vector.t (option sig * move) n) :=
     Vector.map2 doAct ts actions.
 
-  (** Read characters on all tapes *)
+  (* Read characters on all tapes *)
   Definition current_chars (n : nat) (tapes : tapes n) := Vector.map current tapes.
 
 End Fix_Sigma.
 
 
-(** ** Rewriting tactics *)
+(* ** Rewriting tactics *)
 
 
-(** Tactic to destruct a vector of tapes of known size *)
+(* Tactic to destruct a vector of tapes of known size *)
 Ltac destruct_tapes := unfold tapes in *; destruct_vector.
 
-(** Simplification Database for tapes and vectors *)
+(* Simplification Database for tapes and vectors *)
 Create HintDb tape.
 Create HintDb vector.
 
-(** We use [rewrite_strat] instead of [autorewrite], because it is faster. *)
+(* We use [rewrite_strat] instead of [autorewrite], because it is faster. *)
 Tactic Notation "simpl_tape" :=
   repeat rewrite_strat (topdown (choice (hints tape) (hints vector))).
 Tactic Notation "simpl_tape" "in" ident(H) :=
@@ -245,13 +245,13 @@ Hint Rewrite VectorSpec.const_nth : vector.
 
 
 
-(** Set Notation scopes for tapes, so that the alphabet of the tape is parsed as a type (e.g. [X+Y] is parsed as the sum type, not the addition of [X] and [Y]) *)
+(* Set Notation scopes for tapes, so that the alphabet of the tape is parsed as a type (e.g. [X+Y] is parsed as the sum type, not the addition of [X] and [Y]) *)
 Arguments tapes (sig % type) (n % nat).
 
 
-(** ** Nop Action *)
+(* ** Nop Action *)
 
-(** (∅, Nmove)^n *)
+(* (∅, Nmove)^n *)
 Section Nop_Action.
   Variable n : nat.
   Variable sig : finType.
@@ -270,14 +270,14 @@ Section Nop_Action.
 
 End Nop_Action.
 
-(** Make [n] and [sig] contextual implicit *)
+(* Make [n] and [sig] contextual implicit *)
 Arguments nop_action {_ _}.
 
 
 
 
 
-(** ** Mirror tapes *)
+(* ** Mirror tapes *)
 
 Section MirrorTape.
   Variable (n : nat) (sig : Type).
@@ -397,13 +397,13 @@ Hint Rewrite mirror_tapes_nth : tape.
 
 
 
-(** ** Helping functions for tapes *)
+(* ** Helping functions for tapes *)
 
 Section Tape_Local.
 
   Variable sig : Type.
 
-  (** The current symbol :: right symbols *)
+  (* The current symbol :: right symbols *)
   Definition tape_local (t : tape sig) : list sig :=
     match t with
     | niltape _ => []
@@ -412,7 +412,7 @@ Section Tape_Local.
     | midtape _ a l => a :: l
     end.
 
-  (** The current symbol :: left symbols *)
+  (* The current symbol :: left symbols *)
   Definition tape_local_l (t : tape sig) : list sig :=
     match t with
     | niltape _ => []
@@ -527,7 +527,7 @@ Hint Rewrite tape_left_move_right    using auto : tape.
 Hint Rewrite tape_right_move_left    using auto : tape.
 
 
-(** ** Mapping tapes *)
+(* ** Mapping tapes *)
 
 (* Apply a function to each symbol on the tape *)
 Section MapTape.
@@ -541,7 +541,7 @@ Section MapTape.
     - apply leftof.  apply (g t). apply (List.map g l).
     - apply rightof. apply (g t). apply (List.map g l).
     - apply midtape. apply (List.map g l). apply (g t). apply (List.map g l0).
-  Defined.
+  Defined. (* because definition *)
 
   Definition mapTapes {n : nat} : Vector.t (tape tau) n -> Vector.t (tape sig) n := Vector.map mapTape.
 
@@ -602,7 +602,7 @@ Section MapTape.
 
 End MapTape.
 
-(** Rewriting Hints *)
+(* Rewriting Hints *)
 
 Hint Rewrite mapTape_current    : tape.
 Hint Rewrite mapTape_left       : tape.
@@ -635,11 +635,11 @@ Hint Rewrite mapTape_local : tape.
 
 
 
-(** ** Lemmas about [tape_move_left'] and [tape_move_right'] *)
+(* ** Lemmas about [tape_move_left'] and [tape_move_right'] *)
 Section MatchTapes.
   Variable sig : Type.
 
-  (** Left movement *)
+  (* Left movement *)
 
   Lemma tape_left_move_left' ls (x : sig) rs :
     left (tape_move_left' ls x rs) = tl ls.
@@ -665,7 +665,7 @@ Section MatchTapes.
     mirror_tape (tape_move_left' rs x ls) = tape_move_right' ls x rs.
   Proof. now destruct rs; cbn. Qed.
 
-  (** Right movement *)
+  (* Right movement *)
 
   Lemma tape_right_move_right' ls (x : sig) rs :
     right (tape_move_right' ls x rs) = tl rs.
@@ -731,17 +731,17 @@ Hint Rewrite tape_move_niltape tape_write_left tape_write_right tape_write_curre
 
 
 
-(** ** Definition of Multi-Tape Turing Machines *)
+(* ** Definition of Multi-Tape Turing Machines *)
 Section Semantics.
 
   Variable sig : finType.
   
   Notation TM := (TM sig).
-  (** Labelled Multi-Tape Turing Machines *)
+  (* Labelled Multi-Tape Turing Machines *)
   Definition pTM (F: Type) (n:nat) := { M : TM n & state M -> F }.
   
 
-  (** *** Configurations of TMs *)
+  (* *** Configurations of TMs *)
   
   Record mconfig (state:finType) (n:nat): Type :=
     mk_mconfig
@@ -751,7 +751,7 @@ Section Semantics.
       }.
 
 
-  (** *** Machine execution *)
+  (* *** Machine execution *)
   
   Definition step {n} (M:TM n) : mconfig (state M) n -> mconfig (state M) n :=
     fun c =>
@@ -760,34 +760,34 @@ Section Semantics.
 
   Definition haltConf {n} (M : TM n) : mconfig (state M) n -> bool := fun c => halt (cstate c).
 
-  (** Run the machine i steps until it halts *)
+  (* Run the machine i steps until it halts *)
   Definition loopM n (M : TM n) := loop (@step _ M) (@haltConf _ M).
   
-  (** Initial configuration *)  
+  (* Initial configuration *)  
   Definition initc n (M : TM n) tapes :=
     mk_mconfig (n := n) (@start _ n M) tapes.
 
-  (** *** Realisation *)
+  (* *** Realisation *)
 
-  (** Parametrised relations *)
+  (* Parametrised relations *)
   Definition pRel (sig : Type) (F: Type) (n : nat) := Rel (tapes sig n) (F * tapes sig n).
 
-  (** A (labelled) machine [M] realises a (labelled) relation [Rmove], if: for every tape vectors [t], if [M] with [t] terminates in a configuration [c], then [Rmove (t), (projT2 M (cstate c), ctapes c)]. That means that the pair of the input tape vectors, the labelof the state in that the machine terminated, and the output tape, must be in the relation [Rmove]. *)
+  (* A (labelled) machine [M] realises a (labelled) relation [R], if: for every tape vectors [t], if [M] with [t] terminates in a configuration [c], then [R (t), (projT2 M (cstate c), ctapes c)]. That means that the pair of the input tape vectors, the labelof the state in that the machine terminated, and the output tape, must be in the relation [R]. *)
   
-  Definition Realise n F (pM : pTM n F) (Rmove : pRel sig n F) :=
-    forall t k outc, loopM (initc (projT1 pM) t) k = Some outc -> Rmove t (projT2 pM (cstate outc), ctapes outc).
+  Definition Realise n F (pM : pTM n F) (R : pRel sig n F) :=
+    forall t k outc, loopM (initc (projT1 pM) t) k = Some outc -> R t (projT2 pM (cstate outc), ctapes outc).
 
-  Notation "M '⊨' Rmove" := (Realise M Rmove) (no associativity, at level 30, format "M  '⊨'  Rmove").
+  Notation "M '⊨' R" := (Realise M R) (no associativity, at level 30, format "M  '⊨'  R").
 
-  (** Realisation is monotone *)
-  Lemma Realise_monotone n (F : finType) (pM : pTM F n) Rmove Rmove' :
-    pM ⊨ Rmove' -> Rmove' <<=2 Rmove -> pM ⊨ Rmove.
+  (* Realisation is monotone *)
+  Lemma Realise_monotone n (F : Type) (pM : pTM F n) R R' :
+    pM ⊨ R' -> R' <<=2 R -> pM ⊨ R.
   Proof. firstorder. Qed.
 
 
-  (** *** Termination/Runtime *)
+  (* *** Termination/Runtime *)
 
-  (** A machine is said to "terminate in" a relation [T : Rel (tapes sig n) nat], if for every pair of input tape vectors [t] and step numbers [k] such that T t k, there exists an output configuration [cout] that [M] reaches from [t] in [k] steps. *)
+  (* A machine is said to "terminate in" a relation [T : Rel (tapes sig n) nat], if for every pair of input tape vectors [t] and step numbers [k] such that T t k, there exists an output configuration [cout] that [M] reaches from [t] in [k] steps. *)
 
   Definition tRel sig n := Rel (tapes sig n) nat.
 
@@ -798,7 +798,7 @@ Section Semantics.
   Arguments TerminatesIn { _ } _.
   Notation "M ↓ T" := (TerminatesIn M T) (no associativity, at level 60, format "M  '↓'  T").
 
-  (** Termination is anti-monotone *)
+  (* Termination is anti-monotone *)
   Lemma TerminatesIn_monotone {n : nat} (M : TM n) (T T' : tRel sig n) :
     M ↓ T' -> (T <<=2 T') -> M ↓ T.
   Proof. intros H1 H2. firstorder. Qed.
@@ -813,13 +813,13 @@ Section Semantics.
   Qed.
   
 
-  (** Realisation plus termination in constant time *)
-  Definition RealiseIn n (F : finType) (pM : pTM F n) (Rmove : pRel sig F n) (k : nat) :=
-    forall input, exists outc, loopM (initc (projT1 pM) input) k = Some outc /\ Rmove input ((projT2 pM (cstate outc)), ctapes outc).
-  Notation "M '⊨c(' k ')' Rmove" := (RealiseIn M Rmove k) (no associativity, at level 45, format "M  '⊨c(' k ')'  Rmove").
+  (* Realisation plus termination in constant time *)
+  Definition RealiseIn n (F : Type) (pM : pTM F n) (R : pRel sig F n) (k : nat) :=
+    forall input, exists outc, loopM (initc (projT1 pM) input) k = Some outc /\ R input ((projT2 pM (cstate outc)), ctapes outc).
+  Notation "M '⊨c(' k ')' R" := (RealiseIn M R k) (no associativity, at level 45, format "M  '⊨c(' k ')'  R").
 
-  Lemma RealiseIn_monotone n (F : finType) (pM : pTM F n) (Rmove Rmove' : pRel sig F n) k k' :
-    pM ⊨c(k') Rmove' -> k' <= k -> Rmove' <<=2 Rmove -> pM ⊨c(k) Rmove.
+  Lemma RealiseIn_monotone n (F : Type) (pM : pTM F n) (R R' : pRel sig F n) k k' :
+    pM ⊨c(k') R' -> k' <= k -> R' <<=2 R -> pM ⊨c(k) R.
   Proof.
     unfold RealiseIn. intros H1 H2 H3 input.
     specialize (H1 input) as (outc & H1). exists outc.
@@ -828,13 +828,13 @@ Section Semantics.
     - intuition.
   Qed.
 
-  Lemma RealiseIn_monotone' n (F : finType) (pM : pTM F n) (Rmove : pRel sig F n) k k' :
-    pM ⊨c(k') Rmove -> k' <= k -> pM ⊨c(k) Rmove.
+  Lemma RealiseIn_monotone' n (F : Type) (pM : pTM F n) (R : pRel sig F n) k k' :
+    pM ⊨c(k') R -> k' <= k -> pM ⊨c(k) R.
   Proof.
     intros H1 H2. eapply RealiseIn_monotone. eapply H1. assumption. firstorder.
   Qed.
 
-  Lemma RealiseIn_split n (F : finType) (pM : pTM F n) R1 R2 (k : nat) :
+  Lemma RealiseIn_split n (F : Type) (pM : pTM F n) R1 R2 (k : nat) :
     pM ⊨c(k) R1 /\ pM ⊨c(k) R2 <-> pM ⊨c(k) R1 ∩ R2.
   Proof.
     split; swap 1 2; [ intros H | intros (H1&H2)]; repeat intros ?. hnf; firstorder eauto.
@@ -842,8 +842,8 @@ Section Semantics.
     pose proof loop_injective H1 H2 as <-. exists outc. split; hnf; eauto.
   Qed.
   
-  Lemma Realise_total n (F : finType) (pM : { M : TM n & state M -> F }) Rmove k :
-    pM ⊨ Rmove /\ projT1 pM ↓ (fun _ i => k <= i) <-> pM ⊨c(k) Rmove.
+  Lemma Realise_total n (F : Type) (pM : { M : TM n & state M -> F }) R k :
+    pM ⊨ R /\ projT1 pM ↓ (fun _ i => k <= i) <-> pM ⊨c(k) R.
   Proof.
     split.
     - intros (HR & Ht) t. edestruct (Ht t k). cbn; lia. eauto.
@@ -860,29 +860,29 @@ Section Semantics.
         exists x. eapply loop_monotone; eauto.
   Qed.
 
-  Lemma RealiseIn_Realise n (F : finType) (pM : pTM F n) Rmove k :
-    pM ⊨c(k) Rmove -> pM ⊨ Rmove.
+  Lemma RealiseIn_Realise n (F : Type) (pM : pTM F n) R k :
+    pM ⊨c(k) R -> pM ⊨ R.
   Proof. now intros (?&?) % Realise_total. Qed.
 
-  Lemma RealiseIn_TerminatesIn n (F : finType) (pM : { M : TM n & state M -> F }) Rmove k :
-    pM ⊨c(k) Rmove -> projT1 pM ↓ (fun tin l => k <= l). 
+  Lemma RealiseIn_TerminatesIn n (F : Type) (pM : { M : TM n & state M -> F }) R k :
+    pM ⊨c(k) R -> projT1 pM ↓ (fun tin l => k <= l). 
   Proof.
     intros HRel. hnf. intros tin l HSteps. hnf in HRel. specialize (HRel tin) as (outc&HLoop&Rloop).
     exists outc. eapply loop_monotone; eauto.
   Qed.
   
-  Lemma Realise_strengthen n (F : finType) (pM : pTM F n) R1 R2 :
+  Lemma Realise_strengthen n (F : Type) (pM : pTM F n) R1 R2 :
     Realise pM R2 -> Realise pM R1 -> Realise pM (R1 ∩ R2).
   Proof.
     intros HwR HR t. firstorder.
   Qed.
 
 
-  (** *** Canonical relations *)
+  (* *** Canonical relations *)
 
   Section Canonical_Correctness.
     Variable (n : nat).
-    Variable (F : finType).
+    Variable (F : Type).
     Variable (pM : pTM F n).
 
     Definition Canonical_Rel : pRel sig F n :=
@@ -920,17 +920,17 @@ End Semantics.
 
 
 
-(** Notation for parametrised Turing machines *)
+(* Notation for parametrised Turing machines *)
 Notation "'(' M ';' labelling ')'" := (existT (fun x => state x -> _) M labelling).
 
-(** Notations for semantic of concrete Turing machines *)
-Notation "M '⊨' Rmove" := (Realise M Rmove) (no associativity, at level 60, format "M  '⊨'  Rmove").
-Notation "M '⊨c(' k ')' Rmove" := (RealiseIn M Rmove k) (no associativity, at level 45, format "M  '⊨c(' k ')'  Rmove").
+(* Notations for semantic of concrete Turing machines *)
+Notation "M '⊨' R" := (Realise M R) (no associativity, at level 60, format "M  '⊨'  R").
+Notation "M '⊨c(' k ')' R" := (RealiseIn M R k) (no associativity, at level 45, format "M  '⊨c(' k ')'  R").
 Notation "M '↓' t" := (TerminatesIn M t) (no associativity, at level 60, format "M  '↓'  t").
 
 
 
-(** [inhabitedC] instances for state and labels *)
+(* [inhabitedC] instances for state and labels *)
 
 Instance inhabited_move : inhabitedC move := ltac:(repeat constructor).
 
@@ -940,7 +940,7 @@ Proof. constructor. apply start. Qed.
 Lemma inhabited_pTM_lab (n : nat) (sig : finType) (F : Type) (pM : pTM sig F n) : inhabitedC F.
 Proof. constructor. apply (projT2 pM). apply default. Qed.
 
-Hint Extern 4 => lazymatch goal with
+Hint Extern 4 => once lazymatch goal with
                 | [ pM : pTM ?sig ?F ?n |- inhabitedC ?F ] => apply (inhabited_pTM_lab pM)
                 end : typeclass_instances.
 
@@ -954,16 +954,16 @@ End Test_def.
 
 
 
-(** Auxiliary function to actually execute a machine *)
+(* Auxiliary function to actually execute a machine *)
 Definition execTM (sig : finType) (n : nat) (M : TM sig n) (tapes : tapes sig n) (k : nat) :=
   option_map (@ctapes _ _ _) (loopM (initc M tapes) k).
 
-Definition execTM_p (sig : finType) (n : nat) (F : finType) (pM : { M : TM sig n & state M -> F }) (tapes : tapes sig n) (k : nat) :=
+Definition execTM_p (sig : finType) (n : nat) (F : Type) (pM : { M : TM sig n & state M -> F }) (tapes : tapes sig n) (k : nat) :=
   option_map (fun x => (ctapes x, projT2 pM (cstate x))) (loopM (initc (projT1 pM) tapes) k ).
 
 
 
-(** ** Automation of the generation of relations *)
+(* ** Automation of the generation of relations *)
 
 (* Create the smpl tactic databases *)
 Smpl Create TM_Correct.
@@ -972,7 +972,7 @@ Smpl Create TM_Correct.
 Ltac TM_Correct_step := smpl TM_Correct.
 Ltac TM_Correct := repeat TM_Correct_step.
 
-(** ** TM evaluation and loop is equivalent  *)
+(* ** TM evaluation and loop is equivalent  *)
 
 Lemma Vector_map2_ext {A B C} (f g : A -> B -> C) n (v1 : Vector.t A n) (v2 : Vector.t B n) :
   (forall a b, f a b = g a b) ->

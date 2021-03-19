@@ -6,13 +6,15 @@ Require Import Undecidability.PCP.PCP.
 Set Implicit Arguments. 
 Unset Strict Implicit.
 
+Set Default Proof Using "Type".
+
 Notation "x 'el' A" := (In x A) (at level 70).
 Notation "A <<= B" := (incl A B) (at level 70).
 Notation "| A |" := (length A) (at level 65).
 
 Ltac inv H := inversion H; subst; try clear H.
 
-(** *Some basic things concerning lists *)
+(* *Some basic things concerning lists *)
 
 Lemma list_prefix_inv X (a : X) x u y v :
   ~ a el x -> ~ a el u -> x ++ a :: y = u ++ a :: v -> x = u /\ y = v.
@@ -55,7 +57,7 @@ Proof.
 Qed.
 
 
-(** *** Fresh symbols *)
+(* *** Fresh symbols *)
 
 Fixpoint fresh (l : list nat) :=
   match l with
@@ -84,7 +86,7 @@ Section neList.
   Hypothesis S : (forall x A, P A -> P (x :: A)).
   
   Lemma list_ind_ne A : A <> [] -> P A.
-  Proof.
+  Proof using S B.
     intros H. destruct A. congruence. clear H.
     revert x. induction A; eauto.
   Qed.

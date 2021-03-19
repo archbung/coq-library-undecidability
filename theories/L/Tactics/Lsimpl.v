@@ -16,12 +16,12 @@ Ltac Lsimpl' :=
   end.
 
 Ltac Lreduce :=
-  repeat progress (try Lrewrite;try Lbeta). 
+  repeat progress ( (Lrewrite;try Lbeta) || Lbeta). 
            
 
 (*Lsimpl that uses correctnes lemmas*)
-Ltac Lsimpl :=intros(*;repeat foldLocalInts*);
-  lazymatch goal with
+Ltac Lsimpl_old :=intros;
+  once lazymatch goal with
   | |- _ >(<= _ ) _ => Lreduce;try Lreflexivity
   | |- _ ⇓(_ ) _ => repeat progress Lbeta;try Lreflexivity
   | |- _ ⇓(<= _ ) _ => Lreduce;try Lreflexivity
@@ -31,6 +31,13 @@ Ltac Lsimpl :=intros(*;repeat foldLocalInts*);
   (*| |- _ >* _  => repeat Lsimpl';try reflexivity'
   | |- eval _ _  => repeat Lsimpl';try reflexivity'*)
   | |- _ == _  => repeat Lsimpl';try reflexivity'
+  end.
+
+
+Ltac Lsimpl :=
+  lazymatch goal with
+  | |- _ >( _ ) _ => Lsimpl_old
+  | |- _ => LrewriteSimpl
   end.
 
 Ltac LsimplHypo := standardizeHypo 100.
@@ -60,9 +67,10 @@ Tactic Notation "redStep" "in" hyp(h) := redStep in h at 1.
 
 (* register needed lemmas:*)
 
+
 Lemma rho_correct s t : proc s -> lambda t -> rho s t >* s (rho s) t.
 Proof.
-  intros. unfold rho,r. redStep at 1. apply star_trans_l. Lsimpl.
+  intros. unfold rho,r. redStep at 1. apply star_trans_l. now Lsimpl. 
 Qed.
 
 Lemma rho_correctPow s t : proc s -> lambda t -> rho s t >(3) s (rho s) t.
@@ -72,7 +80,7 @@ Proof.
   cbn. closedRewrite. apply pow_step_congL;[|reflexivity]. now Lbeta.  
 Qed.
 
-Hint Resolve rho_correct : Lrewrite.
+(* Hint Resolve rho_correct : Lrewrite. *)
 
 
 Lemma rho_inj s t: rho s = rho t -> s = t.
@@ -93,6 +101,7 @@ Tactic Notation "recStep" constr(P) :=
 
 (*
 Lemma rClosed_closed s: recProc s -> proc s.
+Proof.
   intros [? [? ?]]. subst. split; auto with LProc.
 Qed.
 
@@ -100,18 +109,22 @@ Hint Resolve rClosed_closed : LProc cbv.
  *)
 
 Lemma I_proc : proc I.
+Proof.
   fLproc.
 Qed.
 
 Lemma K_proc : proc K.
+Proof.
   fLproc.
 Qed.
 
 Lemma omega_proc : proc omega.
+Proof.
   fLproc.
 Qed.
 
 Lemma Omega_closed : closed Omega.
+Proof.
   fLproc. 
 Qed.
 

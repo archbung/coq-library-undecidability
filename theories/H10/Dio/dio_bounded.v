@@ -7,7 +7,7 @@
 (*         CeCILL v2 FREE SOFTWARE LICENSE AGREEMENT          *)
 (**************************************************************)
 
-(** ** Object-level encoding of bounded universal quantification *)
+(* ** Object-level encoding of bounded universal quantification *)
 
 Require Import Arith Lia List Bool.
 
@@ -22,10 +22,12 @@ From Undecidability.H10.Dio
 
 Set Implicit Arguments.
 
+Set Default Proof Using "Type".
+
 Local Notation power := (mscal mult 1).
 Local Notation "∑" := (msum plus 0).
 
-(** We show the elimination of bounded universal quantification. The proof is
+(* We show the elimination of bounded universal quantification. The proof is
     based on the paper 
 
        "A new technique for obtaining Diophantine representations via 
@@ -317,7 +319,7 @@ Section dio_rel_bounded_fall.
     Qed.
 
     Local Theorem dio_rel_dc_list_bfall : 𝔻R (fun ν => forall i, i < ν 0 -> exists φ, Forall (dc_eval φ i·ν) ll).
-    Proof.
+    Proof using Hll.
       dio by lemma dc_list_bfall_spec; unfold dc_list_bfall.
       destruct dio_rel_pre_quant as (f & Hf).
       exists (df_mexists il f).
@@ -338,7 +340,7 @@ Section dio_rel_bounded_fall.
 
 End dio_rel_bounded_fall.
 
-(** Composition and renaming to get the desired result, 
+(* Composition and renaming to get the desired result, 
     ie Matiyasevich theorem of 1997 stating the 
 
       "Diophantine admissibility of

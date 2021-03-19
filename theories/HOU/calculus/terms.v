@@ -1,8 +1,8 @@
-(** Automatically Synthesized by Autosubst. Considered preliminaries **)
+(* Automatically Synthesized by Autosubst. Considered preliminaries **)
 From Undecidability.HOU Require Import std.std.
 From Undecidability.HOU Require Export unscoped.
 
-
+Set Default Proof Using "Type".
 
 Section Terms.
 

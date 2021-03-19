@@ -3,6 +3,8 @@ Import UnscopedNotations.
 From Undecidability.SystemF.Util Require Import typing_facts term_facts step.
 Require Import Setoid Morphisms.
 
+Set Default Proof Using "Type".
+
 Definition pw_iff {X} p q := (forall x : X, p x <-> q x).
 Notation "p == q" := (pw_iff p q) (at level 70).
 
@@ -19,9 +21,9 @@ Proof.
 Qed.
 Ltac pw := repeat (apply pw; intros).
 
-(** * Strong Normalisation  *)
+(* * Strong Normalisation  *)
 
-(** ** Logical Relation  *)
+(* ** Logical Relation  *)
 
 Definition active P :=
   match P with
@@ -92,6 +94,7 @@ Section Evaluation.
   Proof. now rewrite eval_ren. Qed.
 
   Definition lift : model.
+  Proof using M.
     refine (mk_model id (Arr M) (fun F => All M (Var M >> F)) _ _ _).
     abstract firstorder.
     abstract (intros p1 p2 H; eapply All_ext; intros P; eapply H).
@@ -132,7 +135,7 @@ Notation V s ρ := (eval D ρ s).
 Notation K s ρ := (M (V s ρ)).
 Notation E s ρ := (R (V s ρ)).
 
-(** ** Reducibility Candidates  *)
+(* ** Reducibility Candidates  *)
 
 Lemma R_sn p P :
   R p P -> sn P.
@@ -163,7 +166,7 @@ Proof.
     erewrite <- rinst_inst_term; try reflexivity. eauto.
 Qed.
 
-(** ** Logical Relation  *)
+(* ** Logical Relation  *)
 
 Lemma K_var n ρ P :
   K (poly_var n) ρ P = forall ξ1 ξ2, ρ n (ren_term ξ1 ξ2 P).
@@ -221,7 +224,7 @@ Proof.
   intros P. now rewrite eval_beta. 
 Qed.
 
-(** ** Logical relation on contexts  *)
+(* ** Logical relation on contexts  *)
 
 Definition C (Γ : nat -> poly_type) (ρ : nat -> tpred) : (nat -> term) -> Prop :=
   fun σ => forall n, E (Γ n) ρ (σ n).
@@ -250,7 +253,7 @@ Proof.
   intros H. eapply C_scons. eapply R_var. now eapply C_rename.
 Qed.
 
-(** ** Fundamental theorem & Strong Normalisation  *)
+(* ** Fundamental theorem & Strong Normalisation  *)
 Lemma E2_ind s t ρ1 ρ2 p :
   (forall P Q, E s ρ1 P -> E t ρ2 Q -> (forall P', step P P' -> p P' Q) -> (forall Q', step Q Q' -> p P Q') -> p P Q) ->
   forall P Q, E s ρ1 P -> E t ρ2 Q -> p P Q.

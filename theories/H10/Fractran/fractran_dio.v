@@ -7,7 +7,7 @@
 (*         CeCILL v2 FREE SOFTWARE LICENSE AGREEMENT          *)
 (**************************************************************)
 
-(** ** FRACTRAN termination is Diophantine *)
+(* ** FRACTRAN termination is Diophantine *)
 
 (* Require Import dio_expr dio_logic dio_elem dio_poly. *)
 
@@ -23,6 +23,8 @@ From Undecidability.H10.Dio
   Require Import dio_logic dio_bounded dio_rt_closure dio_single.
 
 Set Implicit Arguments.
+
+Set Default Proof Using "Type".
 
 Section fractran_dio.
 

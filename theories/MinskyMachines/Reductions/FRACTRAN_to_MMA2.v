@@ -7,7 +7,7 @@
 (*         CeCILL v2 FREE SOFTWARE LICENSE AGREEMENT          *)
 (**************************************************************)
 
-(** A Coq computable reduction from n-registers MM termination
+(* A Coq computable reduction from n-registers MM termination
     to 2-registers MMA termination. Beware that the semantics
     of MMA is a bit different than the semantics of MM: 
 
@@ -26,6 +26,8 @@ From Undecidability.FRACTRAN Require Import FRACTRAN.
 From Undecidability.MinskyMachines Require Import mma_defs fractran_mma.
 
 Set Implicit Arguments.
+
+Set Default Proof Using "Type".
 
 Local Notation "P /MMA/ s ↓" := (sss_terminates (@mma_sss 2) P s) (at level 70, no associativity).
 
@@ -58,4 +60,3 @@ Section FRACTRAN_REG_MMA2.
 End FRACTRAN_REG_MMA2.
 
 Check FRACTRAN_REG_MMA2_HALTING.
-

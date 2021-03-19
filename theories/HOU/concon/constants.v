@@ -1,12 +1,14 @@
-Require Import List Omega Lia Morphisms Setoid.
-From Undecidability.HOU Require Import std.std calculus.calculus.
+Require Import List Arith Lia Morphisms Setoid.
+From Undecidability.HOU Require Import calculus.calculus.
 From Undecidability.HOU Require Import
         unification.higher_order_unification unification.nth_order_unification
-        concon.conservativity.
+        concon.conservativity_constants concon.conservativity.
 Import ListNotations.
 
-(** * Constants *)
-(** ** Adding Constants *)
+Set Default Proof Using "Type".
+
+(* * Constants *)
+(* ** Adding Constants *)
 Section Retracts.
     Variable (X Y: Const).
     Variable (RE: retract X Y).
@@ -61,7 +63,7 @@ Section Retracts.
     Lemma inj_typing n sigma Gamma Delta:
        Delta ⊩(n) sigma : Gamma ->
        Delta ⊩(n) sigma >> subst_consts inj : Gamma.
-    Proof.
+    Proof using consts_agree.
       intros ????. eapply ordertyping_preservation_consts; eauto.
       intros ??; unfold inj.
       rewrite consts_agree.
@@ -74,7 +76,7 @@ Section Retracts.
       Delta ⊩(n) sigma : Gamma ->
       (forall x c, x ∈ dom Gamma -> c ∈ consts (sigma x) -> nth Delta (f c) = Some (target (ctype Y c))) ->
       Delta ⊩(n) sigma >> subst_consts (re f) : Gamma.
-    Proof.
+    Proof using consts_agree.
       intros L T Sub x A H; unfold funcomp.
       eapply ordertyping_preservation_consts; eauto.
       intros y H'. 
@@ -143,7 +145,7 @@ Section Retracts.
 
     Lemma unification_constants_monotone n:
       1 <= n -> OU n X ⪯ OU n Y.
-    Proof.
+    Proof using re inj consts_agree RE.
       intros H; exists unification_retract.
       intros I; split;
         eauto using unification_retract_forward, unification_retract_backward.
@@ -154,7 +156,7 @@ End Retracts.
 
 
 
-(** ** Removing Constants *)
+(* ** Removing Constants *)
 Section RemoveConstants.
 
   Variable (X Y: Const) (RE: retract Y X).
@@ -197,7 +199,7 @@ Section RemoveConstants.
 
   Let inv_subst C (sigma: fin -> exp Y) (x: nat) :=
     inv_term C (sigma x).
-
+    Set Default Proof Using "Type".
 
   Section EncodingLemmas.
     Variable (C: list X) (n: nat).
@@ -207,7 +209,7 @@ Section RemoveConstants.
       Gamma ⊢(n) s : A ->
       (forall x, x ∈ consts s -> R' x = None -> x ∈ C) ->
       enc_ctx C Gamma ⊢(n) enc_term C s : enc_type C A.
-    Proof.
+    Proof using consts_agree O.
       intros T H. eapply Lambda_ordertyping; simplify; eauto.
       eapply ordertyping_preservation_consts.
       eapply ordertyping_weak_preservation_under_substitution; eauto.
@@ -251,7 +253,7 @@ Section RemoveConstants.
   Lemma inv_term_typing Gamma s A:
     Gamma ⊢(n) s : enc_type C A ->
     Gamma ⊢(n) inv_term C s : A.
-  Proof.
+  Proof using consts_agree O.
     intros H; unfold inv_term.
     eapply AppR_ordertyping with (L := map (ctype X) C).
     eapply const_ordertyping_list. rewrite O; eauto. 
@@ -267,7 +269,7 @@ Section RemoveConstants.
      Delta ⊩(n) sigma : Gamma ->
     (forall x c, c ∈ consts (sigma x) -> R' c = None -> c ∈ C) ->
     enc_ctx C Delta ⊩(n) enc_subst C sigma : enc_ctx C Gamma.
-  Proof.
+  Proof using consts_agree O.
     intros ?????. unfold enc_ctx in H1. rewrite nth_error_map_option in H1.
     destruct nth eqn: EQ; try discriminate; injection H1 as <-.
     eapply remove_constants_ordertyping; eauto.
@@ -277,12 +279,12 @@ Section RemoveConstants.
   Lemma inv_subst_typing Delta sigma Gamma:
      Delta ⊩(n) sigma : enc_ctx C Gamma ->
      Delta ⊩(n) inv_subst C sigma : Gamma.
-  Proof.
+  Proof using consts_agree O.
     intros ????. eapply inv_term_typing, H.
     unfold enc_ctx; erewrite map_nth_error; eauto.  
   Qed.
 
-
+  Unset Default Proof Using.
 
   Global Instance enc_proper:
     Proper (equiv (@step X) ++> equiv (@step Y)) (enc_term C).
@@ -297,14 +299,14 @@ Section RemoveConstants.
     intros ?? H; unfold inv_term; now rewrite H.
   Qed.
 
-  
+  Set Default Proof Using "Type".
 
   
   Lemma subst_consts_subst Z (s: exp X) sigma tau theta zeta (kappa: X -> exp Z):
     (forall x, x ∈ vars s -> sigma • subst_consts zeta (tau x) >* subst_consts kappa (theta x)) ->
     (forall x, x ∈ consts s -> sigma • zeta x >* kappa x) ->
     sigma • subst_consts zeta (tau • s) >* subst_consts kappa (theta • s).
-  Proof.
+  Proof using ι n inv_term inv_subst enc_term enc_subst enc_const Y RE R' C.
     induction s in sigma, zeta, tau, kappa, theta |-*.
     - cbn; intros; eapply H; now econstructor.
     - cbn; intros; eapply H0; eauto.
@@ -331,7 +333,7 @@ Section RemoveConstants.
     (forall x c, c ∈ consts (tau x) -> R' c = None -> c ∈ C) ->
     (forall x, x ∈ consts s -> R' x = None -> x ∈ C) ->
     enc_subst C tau • enc_term C s >* enc_term C (tau • s). 
-  Proof.
+  Proof using n.
     intros H1 H2; unfold enc_term. asimpl. eapply Lambda_steps_proper.
     rewrite subst_consts_subst; eauto.
     - intros x ?. unfold funcomp at 1. 
@@ -365,7 +367,7 @@ Section RemoveConstants.
   Lemma enc_term_app sigma s:
     (forall x, x ∈ consts s -> R' x = None -> x ∈ C) ->
     inv_term C (sigma • enc_term C s) >* inv_subst C sigma • s.
-  Proof.
+  Proof using n.
     intros H. unfold enc_term, inv_term.
     asimpl. rewrite subst_consts_Lambda.
     rewrite AppR_Lambda'; simplify; eauto.
@@ -429,12 +431,12 @@ Section RemoveConstants.
   Lemma enc_inv_motivation s:
     (forall x, x ∈ consts s -> R' x = None -> x ∈ C) ->
     inv_term C (enc_term C s) >* (fun x => AppR (var x) (map const C)) • s.
-  Proof.
+  Proof using n.
     intros H. replace (enc_term C s) with (var • enc_term C s) by now asimpl.
     rewrite enc_term_app; eauto.
   Qed.
    
-
+  
 
   End EncodingLemmas.
 
@@ -463,7 +465,8 @@ Section RemoveConstants.
     eapply filter_In; destruct eq_dec; intuition. 
   Qed.
 
-      
+  
+
   Lemma remove_constants_forward n (I: orduni n X)
         (H: ord' (map (ctype X) (iConsts I)) < n):
     OU n X I -> OU n Y (remove_constants n I H).
@@ -485,7 +488,7 @@ Section RemoveConstants.
       rewrite !enc_subst_term_reduce; eauto; intuition.
       now rewrite E.
       all: eapply filter_In; destruct eq_dec; cbn; intuition.
-      all: rewrite app_nil_r; eauto.  
+      all: rewrite app_nil_r; eauto.
   Qed.
 
 
@@ -505,7 +508,7 @@ Section RemoveConstants.
   Lemma remove_constants_reduction n:
     1 <= n -> 
     (forall x, tight RE x = None -> ord (ctype X x) < n) -> OU n X ⪯ OU n Y.
-  Proof.
+  Proof using consts_agree.
     intros L ?.
     assert (forall I: orduni n X, ord' (map (ctype X) (iConsts I)) < n) as O.
     - intros ?; destruct n; try lia.
@@ -522,77 +525,3 @@ Section RemoveConstants.
 
 
 End RemoveConstants.
-
-
-
-(** ** Goldfarb sharp *)
-
-From Undecidability.HOU Require Import
-   second_order.diophantine_equations second_order.goldfarb.reduction.
-
-Definition gonly : Const :=
-  {|
-    const_type := option False;
-    ctype := fun o => match o with
-                  | None => alpha → alpha → alpha
-                  | Some f => match f with end
-                  end
-                    
-  |}.
-
-Program Instance RE_ag_gonly : retract gonly ag :=
-  {|
-    I := fun _ => None;
-    R := fun x => match x with None => Some None | _ => None end
-  |}.
-Next Obligation.
-  now destruct x as [[]|].
-Qed.
-  
-
-
-Lemma Goldfarb_remove:
-  H10 ⪯ OU 2 ag /\ OU 2 ag ⪯ OU 2 gonly.
-Proof.
-  split. eapply Goldfarb.
-  eapply (@remove_constants_reduction ag gonly); eauto.
-  intros [[]|]; cbn; eauto.
-  intros [[[]|]|]; cbn; eauto.
-  destruct eq_dec; intuition  discriminate.
-Qed.
-
-
-Lemma Goldfarb_sharp (C: Const) (re: retract gonly C):
-  ctype C (I None) = alpha → alpha → alpha -> OU 2 gonly ⪯ OU 2 C.
-Proof.
-  intros. eapply unification_constants_monotone; eauto.
-  intros [[]|]; cbn; eauto.
-Qed.
-
-
-Definition cfree : Const :=
-  {|
-    const_type := False;
-    ctype := fun f => match f with end
-  |}.
-
-Program Instance RE_cfree X : retract cfree X :=
-  {|
-    I := fun f => match f with end;
-    R := fun x => None
-  |}.
-
-
-Lemma Goldfarb_Huet X:
-  OU 2 gonly ⪯ OU 3 gonly /\
-  OU 3 gonly ⪯ OU 3 cfree /\
-  OU 3 cfree ⪯ OU 3 X.
-Proof.
-  repeat split. 
-  eapply unification_step; eauto.
-  eapply remove_constants_reduction; eauto.  
-  intros []. intros [[]|]; cbn; eauto.
-  eapply unification_constants_monotone; eauto.
-  intros [].
-Qed.
-         

@@ -1,7 +1,8 @@
-From Undecidability Require Import ProgrammingTools.
+(* From Undecidability Require Import Combinators.Combinators Multi Basic.Mono TMTac. *)
+From Undecidability.TM Require Import ProgrammingTools.
 From Undecidability Require Import ArithPrelim.
-
 From Undecidability Require Import TM.Compound.Shift.
+From Undecidability Require Import TM.Util.VectorPrelim.
 
 From Undecidability Require Import EncodeTapes TM.Util.VectorPrelim.
 Require Import FunInd.
@@ -26,6 +27,8 @@ Proof.
   - intros _. auto.
 Qed.
 
+
+(* TODO: ~> somewhere else *)
 Lemma vector_to_list_inj (X : Type) (n : nat) (xs ys : Vector.t X n) :
   vector_to_list xs = vector_to_list ys -> xs = ys.
 Proof.
@@ -34,15 +37,11 @@ Proof.
   - destruct_vector. cbn in *. inv H. f_equal. auto.
 Qed.
 
-Definition fin_to_nat (n : nat) (i : Fin.t n) : nat := proj1_sig (Fin.to_nat i).
-Module FinCoercion.
-  Coercion fin_to_nat : Fin.t >-> nat. 
-  Export Set Printing Coercions.
-End FinCoercion.
-
-Import FinCoercion.
 
 Section Fin.
+
+  Global Coercion fin_to_nat (n : nat) (i : Fin.t n) : nat := proj1_sig (Fin.to_nat i).
+  Global Set Printing Coercions.
 
   Lemma fin_to_nat_lt (n : nat) (i : Fin.t n) : fin_to_nat i < n.
   Proof. unfold fin_to_nat. destruct (Fin.to_nat i). cbn. auto. Qed.
@@ -88,12 +87,12 @@ Section Fin.
     - decide (n' = 0) as [ H | H]. (* [destruct] makes troubles here *)
       + intros _. apply Fin.F1.
       + intros _. apply Fin.FS. apply (finMax n'). auto.
-  Defined.
+  Defined. (* because definition *)
 
   Definition finMax' (n : nat) : Fin.t (S n).
   Proof.
     apply finMax. apply Nat.neq_succ_0.
-  Defined.
+  Defined. (* because definition *)
 
   Lemma finMax_ext (n : nat) (H1 H2 : n <> 0) : finMax H1 = finMax H2.
   Proof.
@@ -125,7 +124,7 @@ Section Fin.
             | 0 => fun H => False_rec _ _
             | S n' => fun _ => Fin.F1
             end); auto.
-  Defined.
+  Defined. (* because definition *)
 
   Lemma finMin_O (n : nat) (H : S n <> 0) : finMin H = Fin.F1.
   Proof. cbn. reflexivity. Qed.
@@ -162,10 +161,10 @@ Section Fin.
         revert n' i HDec. refine (@Fin.caseS (fun n' i => forall (HDec : n' <> 0), i <> Fin.FS (finMax HDec) -> Fin.t (S n')) _ _).
         * intros. apply Fin.FS. apply finMin. apply HDec.
         * intros. apply Fin.FS. eapply finSucc. eapply finSucc_help'. apply H.
-  Defined.
+  Defined. (* because definition *)
 
   Definition finSucc' (n : nat) (i : Fin.t (S n)) (H : i <> finMax' n) : Fin.t (S n).
-  Proof. unshelve eapply finSucc with (i := i). apply Nat.neq_succ_0. apply H. Defined.
+  Proof. unshelve eapply finSucc with (i := i). apply Nat.neq_succ_0. apply H. Defined. (* because definition *)
 
   (* Compute @finSucc 5 Fin0 _ _. *)
   (* Compute finSucc' (_ : Fin4 <> finMax' 10). *)
@@ -182,7 +181,7 @@ Section Fin.
       + destruct (finSucc_opt _ i) as [ rec | ].
         * apply Some. apply Fin.FS. apply rec.
         * apply None.
-  Defined.
+  Defined. (* because definition *)
 
   (* Compute eq_refl : @finSucc_opt 1 Fin0 = None. *)
   (* Compute eq_refl : @finSucc_opt 2 Fin0 = Some Fin1. *)
@@ -244,7 +243,7 @@ Section Fin.
     destruct n.
     - apply None.
     - apply Some. apply Fin.F1.
-  Defined.
+  Defined. (* because definition *)
 
   Lemma finMin_opt_None (n : nat) :
     finMin_opt n = None -> n = 0.
@@ -489,7 +488,7 @@ Section ToSingleTape.
 
 
 
-  (** Go to the current symbol of the selected tape *)
+  (* Go to the current symbol of the selected tape *)
   Section GoToCurrent.
 
     Definition atStart (t : tape sigSim) (tps : list (tape sig)) : Prop :=
@@ -896,7 +895,7 @@ Section ToSingleTape.
   End GoToNext.
 
 
-  (** Read the current symbols *)
+  (* Read the current symbols *)
   Section ReadCurrentSymbols.
 
     Local Arguments insertKnownSymbol : simpl never.
@@ -1203,7 +1202,7 @@ Section ToSingleTape.
       {
         eapply Realise_monotone.
         { TM_Correct. }
-        { intros tin (yout, tout) H. intros T HEncT. unfold contains_tapes in *. TMSimp_old.
+        { intros tin (yout, tout) H. intros T HEncT. unfold contains_tapes in *. TMSimp.
           clear_except E. apply finMin_opt_None in E as ->. destruct_tapes. cbn.
           split; cbn; auto. hnf. reflexivity.
         }
@@ -1211,7 +1210,7 @@ Section ToSingleTape.
       {
         eapply Realise_monotone.
         { TM_Correct. apply ReadCurrentSymbols_Loop_Realise. }
-        { intros tin (yout, tout) H. intros T HEncT. unfold contains_tapes in *. TMSimp_old.
+        { intros tin (yout, tout) H. intros T HEncT. unfold contains_tapes in *. TMSimp.
           rename H0 into HLoop_cons, H1 into HLoop_nil. clear HLoop_nil.
           pose proof finMin_opt_Some E as (n'&E'). pose (T' := Vector.cast T E').
           pose proof finMin_opt_Some_val E as E_val.
@@ -1390,7 +1389,7 @@ Section ToSingleTape.
       | _ => false
       end.
 
-    (** The more complicated part is writing, because we may have to alocate more memory by shifting *)
+    (* The more complicated part is writing, because we may have to alocate more memory by shifting *)
 
     Definition DoWrite_Rel (d : option move) (s : sig) : pRel sigSim unit 1 :=
       ignoreParam
@@ -1662,7 +1661,7 @@ Section ToSingleTape.
     Arguments DoMove : simpl never.
 
 
-    (** First write, then move *)
+    (* First write, then move *)
     Definition DoAction_Rel (d : option move) (a : option sig * move) : pRel sigSim unit 1 :=
       ignoreParam
         (fun tin tout =>
@@ -2296,6 +2295,3 @@ Section ToSingleTape.
   End Loop.
 
 End ToSingleTape.
-
-
-(* Print Assumptions ToSingleTape_Realise'. *)

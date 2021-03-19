@@ -1,21 +1,28 @@
 From Undecidability.L.Tactics Require Import LTactics.
-From Undecidability.L.Datatypes Require Import LNat LTerm LProd Lists.
+From Undecidability.L.Datatypes Require Import LNat LTerm LBool LProd List.List_enc LOptions.
 
-(** ** Extracted encoding of natural numbers *)
+(* ** Extracted encoding of natural numbers *)
 
 Instance term_nat_enc : computableTime' (nat_enc) (fun n _ => (n * 14 + 12,tt)).
 Proof.
   extract. solverec.
 Qed.
 
-(** ** Extracted term encoding *)
+(* ** Extracted term encoding *)
 
 Instance term_term_enc : computableTime' (term_enc) (fun s _ => (size s * 30,tt)).
 Proof.
   extract. solverec.
 Qed.
 
-(** ** Extracted tuple encoding *)
+
+
+Instance bool_enc :computableTime' (@bool_enc) (fun l _ => (12,tt)).
+Proof.
+  unfold bool_enc. extract. solverec.
+Qed.
+
+(* ** Extracted tuple encoding *)
 
 Instance term_prod_enc X Y (R1:registered X) (R2:registered Y) t__X t__Y
          `{computableTime' (@enc X _) t__X} `{computableTime' (@enc Y _) t__Y}

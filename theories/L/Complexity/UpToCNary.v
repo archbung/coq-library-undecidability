@@ -1,10 +1,8 @@
-From Undecidability Require Export UpToC.
+From Undecidability.L.Complexity Require Export UpToC GenericNary.
 
 Require Import smpl.Smpl.
 From Coq Require Import Setoid.
 From Coq Require Import CRelationClasses CMorphisms.
-From Undecidability Require Export UpToC.
-From Undecidability Require Export GenericNary.
 From Undecidability.Shared.Libs.PSL Require FinTypes.
 
 Local Set Universe Polymorphism. 
@@ -16,7 +14,7 @@ Proof. reflexivity. Qed.
 
 Smpl Add 2 rewrite leToC_eta in *: nary_prepare.
 
-
+Set Default Proof Using "Type".
 
 Section workaround.
   (*This makes the apply_nary tactic and the rewrites with leToC_eta and "=" work *)
@@ -111,6 +109,7 @@ Lemma upToC_pow_r_drop_nary domain c f (F : Rarrow domain nat) :
   0 < c
   -> f <=c Uncurry F
   -> f <=c Fun' (fun x => (App F x) ^ c).
+Proof.
   now prove_nary upToC_pow_r_drop.
 Qed.
 
@@ -118,11 +117,12 @@ Lemma upToC_pow_le_compat_nary domain c c' (f f' : Rarrow domain nat) :
   0 < c -> c <= c'
   -> Uncurry f <=c Uncurry f'
   -> Fun' (fun x => (App f x) ^ c) <=c Fun' (fun x => (App f' x) ^ c').
+Proof.
   now prove_nary upToC_pow_le_compat.
 Qed.    
 
 
-(** Applying n-ary leUpToC lemmas *)
+(* Applying n-ary leUpToC lemmas *)
 
 Ltac domain_of_prod S :=
   let S := constr:(S) in   
@@ -168,6 +168,7 @@ Smpl Add upToC_le_nary_solve : upToC_solve.
 Goal
   @leUpToC (nat*bool*nat)
   (fun '(xxx,y,z) => xxx+2+3*z) (fun '(x,y,z) => x+z+1).
+Proof.
   smpl_upToC_solve.
 Qed.
 

@@ -1,7 +1,7 @@
 From Undecidability.L Require Import Tactics.LTactics Datatypes.LBool.
 From Undecidability.L Require Import Tactics.GenEncode.
 
-(** ** Encoding of sum type *)
+(* ** Encoding of sum type *)
 Section Fix_XY.
 
   Variable X Y:Type.
@@ -58,7 +58,7 @@ Section sum_eqb.
     end.
 
   Lemma sum_eqb_spec A B : reflect (A = B) (sum_eqb A B).
-  Proof.
+  Proof using spec__X spec__Y.
     destruct A, B; (try now econstructor);cbn.
     -destruct (spec__X x x0); econstructor;congruence.
     -destruct (spec__Y y y0); constructor;congruence.
@@ -80,7 +80,7 @@ Section int.
                                                                                           | _,_ => 9 end,tt)))))). 
   Proof.
     extract. solverec.
-  Defined. *)
+  Defined. (*comment *) *)
 
   Global Instance eqbSum f g `{eqbClass (X:=X) f} `{eqbClass (X:=Y) g}:
     eqbClass (sum_eqb f g).

@@ -1,11 +1,13 @@
 Set Implicit Arguments.
-Require Import List Omega Lia.
-From Undecidability.HOU Require Import std.std unification.unification calculus.calculus.
+Require Import List Arith Lia.
+From Undecidability.HOU Require Import std.std calculus.calculus.
 Import ListNotations.
 From Undecidability.HOU.second_order Require Import diophantine_equations dowek.encoding.
+Require Import Undecidability.HOU.unification.nth_order_unification.
 
+Set Default Proof Using "Type".
 
-(** ** Equivalences *)
+(* ** Equivalences *)
 Section EquationEquivalences.
 
   Variable (X: Const) (sigma: fin -> exp X).
@@ -26,7 +28,7 @@ Section EquationEquivalences.
 
     Lemma backward_vars x:
       sigma • fst (varEQ x) ≡ sigma • snd (varEQ x) ->  exists n, sigma x = enc n.
-    Proof.
+    Proof using N.
       intros ?. eapply enc_characteristic; eauto.
       cbn in H. asimpl. asimpl in H.
       unfold shift in *. unfold funcomp at 5 in H.
@@ -44,14 +46,14 @@ Section EquationEquivalences.
 
     Lemma forward_consts:
       n = 1 -> sigma • fst (constEQ x) ≡ sigma • snd (constEQ x).
-    Proof.
+    Proof using EQx.
       intros; unfold constEQ, fst, snd. subst.
       asimpl; now rewrite EQx.
     Qed.
 
     Lemma backward_consts:
       sigma • fst (constEQ x) ≡ sigma • snd (constEQ x) -> n = 1.
-    Proof.
+    Proof using EQx.
       intros EQ; unfold constEQ, fst, snd in EQ.
       asimpl in EQ. rewrite EQx in EQ.
       eapply enc_equiv_injective; eauto.
@@ -66,7 +68,7 @@ Section EquationEquivalences.
 
     Lemma forward_add:
       m + n = p -> sigma • fst (addEQ x y z) ≡ sigma • snd (addEQ x y z).
-    Proof.
+    Proof using EQz EQy EQx.
       intros; unfold addEQ, fst, snd; asimpl.
       now rewrite EQx, EQy, EQz, <-enc_add, H.
     Qed.
@@ -74,7 +76,7 @@ Section EquationEquivalences.
 
     Lemma backward_add:
       sigma • fst (addEQ x y z) ≡ sigma • snd (addEQ x y z) -> m + n = p.
-    Proof.
+    Proof using EQz EQy EQx.
       intros EQ; unfold addEQ, fst, snd in EQ; asimpl in EQ.
       rewrite EQx, EQy, EQz, <-enc_add in EQ.
       eauto using enc_equiv_injective.
@@ -89,7 +91,7 @@ Section EquationEquivalences.
 
     Lemma forward_mult :
       m * n = p -> sigma • fst (mulEQ x y z) ≡ sigma • snd (mulEQ x y z).
-    Proof.
+    Proof using EQz EQy EQx.
       intros; unfold mulEQ, fst, snd; asimpl.
       now rewrite EQx, EQy, EQz, <-enc_mul, H.
     Qed.
@@ -97,7 +99,7 @@ Section EquationEquivalences.
 
     Lemma backward_mult:
       sigma • fst (mulEQ x y z) ≡ sigma • snd (mulEQ x y z) -> m * n = p.
-    Proof.
+    Proof using EQz EQy EQx.
       intros EQ; unfold mulEQ, fst, snd in EQ; asimpl in EQ.
       rewrite EQx, EQy, EQz, <-enc_mul in EQ.
       eauto using enc_equiv_injective.
@@ -106,9 +108,7 @@ Section EquationEquivalences.
   End Multiplication.
 End  EquationEquivalences.
 
-
-
-(** ** Forward Direction **)
+(* ** Forward Direction **)
 Section Forward.
   Variable (X: Const) (E: list deq).
 
@@ -144,7 +144,7 @@ Section Forward.
 End Forward.
 
 
-(** ** Backward Direction **)
+(* ** Backward Direction **)
 Section Backward.
   Variable (X: Const).
   Implicit Types (sigma: nat -> exp X) (x y z c n: nat).

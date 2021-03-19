@@ -7,7 +7,7 @@
 (*         CeCILL v2 FREE SOFTWARE LICENSE AGREEMENT          *)
 (**************************************************************)
 
-(** ** Elementary diophantine constraints *)
+(* ** Elementary diophantine constraints *)
 
 Require Import List Arith Lia.
 
@@ -19,9 +19,11 @@ From Undecidability.H10.Dio
 
 Set Implicit Arguments.
 
+Set Default Proof Using "Type".
+
 Section interval.
 
-  (** A small interval & valuation library *)
+  (* A small interval & valuation library *)
 
   Definition interval := (nat * nat)%type. (* (a,b) <~~~> [a,b[ *)
 
@@ -234,7 +236,7 @@ Section diophantine_system.
     ds_H4   : forall ν, R ν <-> exists φ, Forall (dc_eval φ ν) ds_eqns /\ φ ds_ref = 0;
   }.
 
-  Let g0 (n x0 x1 x2 x3 x4 x5 x6 x7 m : nat) := if le_lt_dec n m then 
+  Local Definition g0 (n x0 x1 x2 x3 x4 x5 x6 x7 m : nat) := if le_lt_dec n m then 
                                  match m - n with
                                    | 0 => x0
                                    | 1 => x1
@@ -251,28 +253,28 @@ Section diophantine_system.
     unfold g0; destruct (le_lt_dec n (n+t)); try lia;
     replace (n+t-n) with t by lia; auto.
 
-  Let g0_0 (n x0 x1 x2 x3 x4 x5 x6 x7 : nat) : g0 n x0 x1 x2 x3 x4 x5 x6 x7 (n+0) = x0.
+  Local Lemma g0_0 (n x0 x1 x2 x3 x4 x5 x6 x7 : nat) : g0 n x0 x1 x2 x3 x4 x5 x6 x7 (n+0) = x0.
   Proof. g0 auto n 0. Qed. 
 
-  Let g0_1 (n x0 x1 x2 x3 x4 x5 x6 x7 : nat) : g0 n x0 x1 x2 x3 x4 x5 x6 x7 (n+1) = x1.
+  Local Lemma g0_1 (n x0 x1 x2 x3 x4 x5 x6 x7 : nat) : g0 n x0 x1 x2 x3 x4 x5 x6 x7 (n+1) = x1.
   Proof. g0 auto n 1. Qed. 
 
-  Let g0_2 (n x0 x1 x2 x3 x4 x5 x6 x7 : nat) : g0 n x0 x1 x2 x3 x4 x5 x6 x7 (n+2) = x2.
+  Local Lemma g0_2 (n x0 x1 x2 x3 x4 x5 x6 x7 : nat) : g0 n x0 x1 x2 x3 x4 x5 x6 x7 (n+2) = x2.
   Proof. g0 auto n 2. Qed. 
  
-  Let g0_3 (n x0 x1 x2 x3 x4 x5 x6 x7 : nat) : g0 n x0 x1 x2 x3 x4 x5 x6 x7 (n+3) = x3.
+  Local Lemma g0_3 (n x0 x1 x2 x3 x4 x5 x6 x7 : nat) : g0 n x0 x1 x2 x3 x4 x5 x6 x7 (n+3) = x3.
   Proof. g0 auto n 3. Qed. 
 
-  Let g0_4 (n x0 x1 x2 x3 x4 x5 x6 x7 : nat) : g0 n x0 x1 x2 x3 x4 x5 x6 x7 (n+4) = x4.
+  Local Lemma g0_4 (n x0 x1 x2 x3 x4 x5 x6 x7 : nat) : g0 n x0 x1 x2 x3 x4 x5 x6 x7 (n+4) = x4.
   Proof. g0 auto n 4. Qed. 
 
-  Let g0_5 (n x0 x1 x2 x3 x4 x5 x6 x7 : nat) : g0 n x0 x1 x2 x3 x4 x5 x6 x7 (n+5) = x5.
+  Local Lemma g0_5 (n x0 x1 x2 x3 x4 x5 x6 x7 : nat) : g0 n x0 x1 x2 x3 x4 x5 x6 x7 (n+5) = x5.
   Proof. g0 auto n 5. Qed. 
 
-  Let g0_6 (n x0 x1 x2 x3 x4 x5 x6 x7 : nat) : g0 n x0 x1 x2 x3 x4 x5 x6 x7 (n+6) = x6.
+  Local Lemma g0_6 (n x0 x1 x2 x3 x4 x5 x6 x7 : nat) : g0 n x0 x1 x2 x3 x4 x5 x6 x7 (n+6) = x6.
   Proof. g0 auto n 6. Qed. 
 
-  Let g0_7 (n x0 x1 x2 x3 x4 x5 x6 x7 : nat) : g0 n x0 x1 x2 x3 x4 x5 x6 x7 (n+7) = x7.
+  Local Lemma g0_7 (n x0 x1 x2 x3 x4 x5 x6 x7 : nat) : g0 n x0 x1 x2 x3 x4 x5 x6 x7 (n+7) = x7.
   Proof. g0 auto n 7. Qed. 
 
   Tactic Notation "rew" "g0" := 
@@ -285,14 +287,14 @@ Section diophantine_system.
     try rewrite !g0_6;
     try rewrite !g0_7.
  
-  Let complete_lemma x y : { u : nat & { v | u+x = v+y } }.
+  Local Lemma complete_lemma x y : { u : nat & { v | u+x = v+y } }.
   Proof.
     destruct (le_lt_dec x y).
     + exists (y-x), 0; lia.
     + exists 0, (x-y); lia.
   Qed.
 
-  (** x = i <~~> s = 0 /\ exists p q u v w, s = p+q /\ u = p+v /\ u = q+w /\ v = x /\ w = i *)
+  (* x = i <~~> s = 0 /\ exists p q u v w, s = p+q /\ u = p+v /\ u = q+w /\ v = x /\ w = i *)
 
   Lemma dio_repr_at_cst x i a : dio_repr_at (fun ν => ν x = i) a 6 5.
   Proof.
@@ -317,7 +319,7 @@ Section diophantine_system.
         repeat rewrite Forall_cons_inv; simpl; lia.
   Defined.
 
-  (** x = y <~~> s = 0 /\ exists p q u v w, s = p+q /\ u = p+v /\ u = q+w /\ v = x /\ w = y *)
+  (* x = y <~~> s = 0 /\ exists p q u v w, s = p+q /\ u = p+v /\ u = q+w /\ v = x /\ w = y *)
 
   Lemma dio_repr_at_eq x y a : dio_repr_at (fun ν => ν x = ν y) a 6 5.
   Proof.
@@ -342,7 +344,7 @@ Section diophantine_system.
         repeat rewrite Forall_cons_inv; simpl; lia.
   Defined.
 
-  (** x = y o z <~~> s = 0 /\ exists p q u v w r t, s = p+q /\ t = p+u /\ t=q+r
+  (* x = y o z <~~> s = 0 /\ exists p q u v w r t, s = p+q /\ t = p+u /\ t=q+r
                                           /\ r = v+w /\ u = x /\ v = y /\ w = z *)
 
   Lemma dio_repr_at_op o x y z a : dio_repr_at (fun ν => ν x = de_op_sem o (ν y) (ν z)) a 8 7.
@@ -372,7 +374,7 @@ Section diophantine_system.
         rewrite <- E6, <- E7, <- E4; lia.
   Defined.
 
-  Let not_interval_union a1 n1 a2 n2 : 
+  Local Lemma not_interval_union a1 n1 a2 n2 : 
            a1+n1 <= a2
         -> ~ in_interval (interval_union (a1, a1 + n1) (a2, a2 + n2)) (a2 + n2).
   Proof.
@@ -380,7 +382,7 @@ Section diophantine_system.
     rewrite Nat.max_r in H3; lia.
   Qed.
 
-  Let dio_op_swap o := match o with do_add => do_mul | do_mul => do_add end.
+  Local Definition dio_op_swap o := match o with do_add => do_mul | do_mul => do_add end.
 
   Fact dio_repr_at_bin o R1 a1 n1 p1 R2 a2 n2 p2 n : 
           dio_repr_at R1 a1 n1 p1
@@ -403,7 +405,7 @@ Section diophantine_system.
       destruct (F3 f) as (g1 & H1).
       destruct (G3 f) as (g2 & H2).
       destruct (@valuation_one_union (a2+n2) (de_op_sem (dio_op_swap o) (g1 r1) (g2 r2)) (a1,a1+n1) g1 (a2,a2+n2) g2) 
-        as (g & Hg1 & Hg2 & Hg3); auto.
+        as (g & Hg1 & Hg2 & Hg3); auto using not_interval_union.
       { red; simpl; intros; lia. }
       exists g; constructor; [ | apply Forall_app; split ].
       * simpl; rewrite Hg1, (Hg2 r1), (Hg3 r2); auto.
@@ -418,7 +420,7 @@ Section diophantine_system.
       * intros [ (g1 & H1 & H2) | (g2 & H1 & H2) ].
         - destruct (G3 f) as (g2 & H3).
           destruct (@valuation_one_union (a2+n2) 0 (a1,a1+n1) g1 (a2,a2+n2) g2) 
-            as (g & Hg1 & Hg2 & Hg3); auto.
+            as (g & Hg1 & Hg2 & Hg3); auto using not_interval_union.
           { red; simpl; intros; lia. }
           exists g; split; auto.
           constructor; simpl; [ | apply Forall_app; split ].
@@ -431,7 +433,7 @@ Section diophantine_system.
              intros x Hx; apply Hg3, G1 with c; auto.
         - destruct (F3 f) as (g1 & H3).
           destruct (@valuation_one_union (a2+n2) 0 (a1,a1+n1) g1 (a2,a2+n2) g2) 
-            as (g & Hg1 & Hg2 & Hg3); auto.
+            as (g & Hg1 & Hg2 & Hg3); auto using not_interval_union.
           { red; simpl; intros; lia. }
           exists g; split; auto.
           constructor; simpl; [ | apply Forall_app; split ].
@@ -450,7 +452,7 @@ Section diophantine_system.
         destruct Hg3 as [ Hg3 | Hg3 ]; [ left | right ]; exists g; auto.
       * intros ((g1 & H1 & H2) & (g2 & H3 & H4)).
         destruct (@valuation_one_union (a2+n2) 0 (a1,a1+n1) g1 (a2,a2+n2) g2) 
-          as (g & Hg1 & Hg2 & Hg3); auto.
+          as (g & Hg1 & Hg2 & Hg3); auto using not_interval_union.
         { red; simpl; intros; lia. }
         exists g; split; auto; constructor; simpl.
         ++ rewrite Hg1, Hg2, Hg3; auto; lia.
@@ -554,7 +556,7 @@ Section diophantine_system.
 
 End diophantine_system.
 
-(** For any diophantine logic formula f of size s, one can compute a list l 
+(* For any diophantine logic formula f of size s, one can compute a list l 
     of at most 1+8*s elementary diophantine constraints, containing at 
     most 7*s variables and such that df_pred f ν is equivalent to 
     the simultaneous satisfiability at ν of all the elementary constraints in l *)
@@ -576,7 +578,3 @@ Proof.
 Defined.
 
 Definition dio_fs f := proj1_sig (dio_formula_elem f).
- 
-(* Check dio_formula_elem.
- *)
-

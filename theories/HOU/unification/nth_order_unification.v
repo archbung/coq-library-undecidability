@@ -1,8 +1,10 @@
-Require Import List Omega Lia Morphisms.
+Require Import List Lia Morphisms.
 From Undecidability.HOU Require Import std.std calculus.calculus unification.higher_order_unification unification.systemunification.
 Import ListNotations.
 
-(** * Nth-Order Unification *)
+Set Default Proof Using "Type".
+
+(* * Nth-Order Unification *)
 Section NthOrderUnificationDefinition.
 
   Context {n: nat} {X: Const}.
@@ -29,7 +31,7 @@ Hint Resolve H1₀ H2₀ : core.
 
 
 
-(** ** Nth-Order System Unification *)
+(* ** Nth-Order System Unification *)
 Section NthOrderSystemUnification.
 
   Variable (X: Const).
@@ -112,29 +114,27 @@ Section NthOrderSystemUnification.
 
 
   Hint Resolve linearize_terms_ordertyping : core.
+    Global Instance orduni_ordsysuni n (I: orduni n X): ordsysuni n.
+    Proof.
+      refine {| Gamma₀' := Gamma₀; E₀' := [(s₀, t₀)]; L₀' := [A₀]; H₀' := _; |}.
+      abstract (eauto).
+    Defined.
 
-    Global Program Instance orduni_ordsysuni n (I: orduni n X): ordsysuni n :=
-        { Gamma₀' := Gamma₀; E₀' := [(s₀, t₀)]; L₀' := [A₀]; H₀' := _; }.
-
-   Global Program Instance ordsysuni_orduni {n} (I: ordsysuni n): ord' L₀' < n -> orduni n X :=
-       {
+    Global Instance ordsysuni_orduni {n} (I: ordsysuni n): ord' L₀' < n -> orduni n X.
+    Proof. 
+      intro H.
+      refine {|
          Gamma₀ := Gamma₀';
          s₀ := linearize_terms (left_side E₀');
          t₀ := linearize_terms (right_side E₀');
          A₀ := (Arr (rev L₀') alpha) → alpha;
          H1₀ := _;
          H2₀ := _;
-       }.
-   Next Obligation.
-     assert (1 <= n) by (destruct n; lia); eauto.
-   Qed.
-   Next Obligation.
-     assert (1 <= n) by (destruct n; lia); eauto.
-   Qed.
-
-
-
-
+       |}.
+      - abstract (assert (1 <= n) by (destruct n; lia); eauto).
+      - abstract (assert (1 <= n) by (destruct n; lia); eauto).
+    Defined.
+    
    Lemma OU_SOU n: OU n X ⪯ SOU n.
    Proof.
      exists (orduni_ordsysuni n); intros I.
@@ -170,7 +170,7 @@ Hint Resolve eqs_ordertyping_soundness : core.
 
 
 
-(** ** Nth-Order Normalisation *)
+(* ** Nth-Order Normalisation *)
 Definition NOU {X: Const} n (I: orduni n X) :=
   exists Delta sigma, Delta ⊩(n) sigma : Gamma₀ /\ sigma • s₀ ≡ sigma • t₀ /\ forall x, normal (sigma x).
 

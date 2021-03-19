@@ -7,7 +7,7 @@
 (*         CeCILL v2 FREE SOFTWARE LICENSE AGREEMENT          *)
 (**************************************************************)
 
-(** ** Object-level encoding of bounded universal quantification I *)
+(* ** Object-level encoding of bounded universal quantification I *)
 
 Require Import Arith Lia List Bool Setoid.
 
@@ -25,13 +25,15 @@ From Undecidability.H10.Dio
 
 Set Implicit Arguments.
 
+Set Default Proof Using "Type".
+
 Local Infix "≲" := binary_le (at level 70, no associativity).
 Local Notation power := (mscal mult 1).
 Local Notation "∑" := (msum plus 0).
 Local Infix "⇣" := nat_meet (at level 40, left associativity).
 Local Infix "⇡" := nat_join (at level 50, left associativity).
 
-(** This the Diophantine encoding of binomial coefficents *)
+(* This the Diophantine encoding of binomial coefficents *)
 
 Section dio_fun_binomial.
 
@@ -40,7 +42,7 @@ Section dio_fun_binomial.
 
   Hint Resolve Nat.mul_add_distr_r : core.
 
-  (** We use this characterization with Newton's devel
+  (* We use this characterization with Newton's devel
 
       (1+q)^n = ∑ binomial(n,i).q^i   when q > 2^n
 
@@ -129,7 +131,7 @@ Proof. dio auto. Defined.
 (* Check dio_fun_binomial_example. *)
 (* Eval compute in df_size_Z (proj1_sig dio_fun_binomial_example). *)
 
-(** This result comes from Lucas' theorem *)
+(* This result comes from Lucas' theorem *)
 
 Theorem binary_le_binomial n m : n ≲ m <-> rem (binomial m n) 2 = 1.
 Proof.

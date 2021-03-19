@@ -2,17 +2,15 @@ From Undecidability.L.Tactics Require Import LTactics GenEncode.
 From Undecidability.L.Datatypes Require Import LNat Lists LProd LFinType LVector.
 From Undecidability.L Require Import Functions.EqBool.
 
-From Undecidability Require Import TM.Util.VectorPrelim.
+From Undecidability.TM.Util Require Import VectorPrelim TM_facts.
 
-
-
-From Undecidability Require Import TM.Util.VectorPrelim.
-From Undecidability Require Import TM.Util.TM_facts.
 Require Import Undecidability.Shared.Libs.PSL.FiniteTypes.FinTypes.
+From Undecidability.TM Require PrettyBounds.SizeBounds.
+
 
 Import L_Notations.
 
-(** ** Extraction of Turing Machine interpreter  *)
+(* ** Extraction of Turing Machine interpreter  *)
 
 Import GenEncode.
 MetaCoq Run (tmGenEncode "move_enc" move).
@@ -75,9 +73,9 @@ Proof.
   -destruct t eqn:eq. all:cbn.
    all:repeat let eq := fresh in destruct _ eqn:eq. all:try congruence.
    all:intros ? [= <-]. all:reflexivity.
-Defined.*)
+Defined. (* because instance *) *)
 
-(** *** Encoding Tapes *)
+(* *** Encoding Tapes *)
 Section reg_tapes.
   Variable sig : Type.
   Context `{reg_sig : registered sig}.
@@ -88,7 +86,7 @@ Section reg_tapes.
   MetaCoq Run (tmGenEncode "tape_enc" (TM.tape sig)).
   Hint Resolve tape_enc_correct : Lrewrite.
 
-  (**Internalize constructors **)
+  (*Internalize constructors **)
 
   Global Instance term_leftof : computableTime' (@leftof sig) (fun _ _ => (1, fun _ _ => (1,tt))).
   Proof.
@@ -117,10 +115,10 @@ Section fix_sig.
   Definition mconfigAsPair {B : finType} {n} (c:mconfig sig B n):= let (x,y) := c in (x,y).
 
   Global Instance registered_mconfig (B : finType) `{registered B} n: registered (mconfig sig B n).
-  Proof.
+  Proof using reg_sig.
     eapply (registerAs mconfigAsPair). clear.
     register_inj.
-  Defined.
+  Defined. (* because registerAs *)
 
   Global Instance term_mconfigAsPair (B : finType) `{registered B} n: computableTime' (@mconfigAsPair B n) (fun _ _ => (1,tt)).
   Proof.
@@ -150,7 +148,7 @@ End fix_sig.
 
 Hint Resolve tape_enc_correct : Lrewrite.
 
-From Undecidability Require Import PrettyBounds.SizeBounds.
+Import PrettyBounds.SizeBounds.
 
 Lemma sizeOfTape_by_size {sig} `{registered sig} (t:(tape sig)) :
   sizeOfTape t <= size (enc t).

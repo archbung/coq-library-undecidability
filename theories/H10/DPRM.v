@@ -7,7 +7,7 @@
 (*         CeCILL v2 FREE SOFTWARE LICENSE AGREEMENT          *)
 (**************************************************************)
 
-(** ** The DPRM theorem *)
+(* ** The DPRM theorem *)
 
 Require Import List Arith.
 
@@ -22,12 +22,14 @@ From Undecidability.MuRec Require Import recalg ra_utils recomp ra_recomp ra_dio
 
 Set Implicit Arguments.
 
+Set Default Proof Using "Type".
+
 Local Notation "P /MM/ s ↓" := (sss_terminates (@mm_sss _) P s) (at level 70, no associativity).
 Local Notation "l '/F/' x ↓" := (fractran_terminates l x) (at level 70, no associativity).
 Local Notation "'⟦' p '⟧'" := (fun φ ν => dp_eval φ ν p).
 Local Notation "f ⇓ v" := (ex (@ra_rel _ f v)) (at level 70, no associativity).
 
-(** Definitions of n-ary recursive enumerable predicates *)
+(* Definitions of n-ary recursive enumerable predicates *)
 
 Section Various_definitions_of_recursive_enum.
 
@@ -110,7 +112,7 @@ Section Various_definitions_of_recursive_enum.
     rewrite Hf, H; tauto.
   Qed.
 
-  (** For n = 1 one could add FRACTRAN as well. The Gödel encoding
+  (* For n = 1 one could add FRACTRAN as well. The Gödel encoding
       of tuple make the definition of FRACTRAN recognisability for
       n > 1 a bit weird *)
 
@@ -130,7 +132,7 @@ Section Various_definitions_of_recursive_enum.
     Qed.
 
     Local Theorem mm_reco_dio_form : dio_rec_form_n.
-    Proof.
+    Proof using HP.
       destruct FRACTRAN as (Q & HQ).
       clear FRACTRAN HP.
       destruct FRACTRAN_HALTING_on_exp_diophantine with n Q as (A & HA); auto.
@@ -184,7 +186,7 @@ Section Various_definitions_of_recursive_enum_1.
         forall x, P x <-> exists w, ⟦p⟧ (vec_pos w) (fun _ => x) 
                                   = ⟦q⟧ (vec_pos w) (fun _ => x) } } }.
 
-  (** Reworking ps and qs to avoid the first primes, may be 2, 3 and 5
+  (* Reworking ps and qs to avoid the first primes, may be 2, 3 and 5
       and show be possible to replace with
 
             FRACTRAN_RECO := { l | forall x, P x <-> l /F/ 2^(1+x) ↓ }
@@ -286,6 +288,3 @@ Theorem DPRM_1 (P : nat -> Prop) :
 Proof. lsplit 3; auto. Qed. 
 
 Check DPRM_1.
-
-
-

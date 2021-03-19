@@ -1,8 +1,10 @@
 Set Implicit Arguments.
-Require Import RelationClasses Morphisms List Lia Omega Lia Init.Nat Setoid.
+Require Import RelationClasses Morphisms List Lia Init.Nat Setoid.
 From Undecidability.HOU Require Import std.std calculus.calculus unification.unification.
 From Undecidability.HOU Require Import third_order.pcp third_order.encoding.
 Import ListNotations.
+
+Set Default Proof Using "Type".
 
 Definition MPCP' '(c, C) :=
   exists I, I ⊆ nats (length C) /\
@@ -11,7 +13,7 @@ Definition MPCP' '(c, C) :=
 Lemma MPCP_MPCP' c C: MPCP (c, C) <-> MPCP' (c, c::C).
 Proof. firstorder. Qed.
 
-(** * Simplified Reduction *)
+(* * Simplified Reduction *)
 Section SimplifiedReduction.
 
   Variable (X: Const).
@@ -29,7 +31,7 @@ Section SimplifiedReduction.
         econstructor; cbn; simplify; eauto.
   Qed.
 
-  (** ** Reduction Function *)
+  (* ** Reduction Function *)
   Program Instance MPCP'_to_U P : orduni 3 X :=
     { 
       Gamma₀ :=  redctx (length (snd P));
@@ -43,7 +45,7 @@ Section SimplifiedReduction.
   Next Obligation. now simplify. Qed.
 
 
-  (** ** Forward Direction *)
+  (* ** Forward Direction *)
   Lemma MPCP'_U3 P: MPCP' P -> OU 3 X (MPCP'_to_U P).
   Proof.
     destruct P as [c C]; intros (I & Sub & EQ).
@@ -61,7 +63,7 @@ Section SimplifiedReduction.
       now rewrite <-!enc_app, EQ. 
   Qed.  
 
-  (** ** Backward Direction *)
+  (* ** Backward Direction *)
   Lemma U3_MPCP' P:
     OU 3 X (MPCP'_to_U P) -> MPCP' P.
   Proof.
@@ -82,7 +84,7 @@ Section SimplifiedReduction.
     destruct H1 as [t' [-> H1]], H2 as [t'' [-> H2]].
     rewrite <-!select_map, !enc_concat, <-!enc_app.
     intros ? % equiv_lam_elim % equiv_lam_elim.
-    eapply enc_eq in H3. 1 - 2: intuition.
+    eapply enc_eq in H3. 1 - 2: intuition. lia.
     all: intros s; try eapply H1; try eapply H2.
   Qed.
 

@@ -1,6 +1,6 @@
-(** ** Addition for [positive] numbers *)
+(* ** Addition for [positive] numbers *)
 
-From Undecidability Require Import ProgrammingTools.
+From Undecidability.TM Require Import ProgrammingTools.
 From Undecidability Require Import BinNumbers.EncodeBinNumbers.
 From Undecidability Require Import BinNumbers.PosDefinitions.
 From Undecidability Require Import BinNumbers.PosPointers.
@@ -82,13 +82,13 @@ Definition fullAdder (x y c : bool) : bool*bool := (xorb (xorb x y) c, (x && y) 
 
 
 
-(** ** Addition Machine *)
+(* ** Addition Machine *)
 
 (* We maintain the invariant that tape 1 (the second tape) contains the smaller number. Otherwise, the base case woudn't work. *)
 (* In the final machine, [Add], the first step is to determine the maximum and copy it to the output tape. *)
 
 
-(** Some more lemmas that we need here *)
+(* Some more lemmas that we need here *)
 
 (* More general than [pushHFS_append1] *)
 Lemma pushHFS_append1' c bits :
@@ -357,7 +357,7 @@ Proof.
 Qed.
 
 
-(** The final step: We find out which number is the maximum and copy the maximum to the output tape, before we start the actual computation *)
+(* The final step: We find out which number is the maximum and copy the maximum to the output tape, before we start the actual computation *)
 
 Definition Add : pTM sigPos^+ unit 3 :=
   Switch Max
@@ -372,7 +372,7 @@ Definition Add_Rel : pRel sigPos^+ unit 3 :=
     forall (p0 p1 : positive),
       tin[@Fin0] ≃ p0 ->
       tin[@Fin1] ≃ p1 ->
-      isRight tin[@Fin2] ->
+      isVoid tin[@Fin2] ->
       tout[@Fin0] ≃ p0 /\
       tout[@Fin1] ≃ p1 /\
       tout[@Fin2] ≃ p0 + p1.
@@ -398,7 +398,7 @@ Qed.
 
 
 
-(** ** Add a number onto a register *)
+(* ** Add a number onto a register *)
 
 (* t1 <- t0 + t1; use t3 as internal register *)
 Definition Add_onto : pTM sigPos^+ unit 3 := Add;; MoveValue _ @[|Fin2; Fin1|].
@@ -408,17 +408,16 @@ Definition Add_onto_Rel : pRel sigPos^+ unit 3 :=
     forall (p0 p1 : positive),
       tin[@Fin0] ≃ p0 ->
       tin[@Fin1] ≃ p1 ->
-      isRight tin[@Fin2] ->
+      isVoid tin[@Fin2] ->
       tout[@Fin0] ≃ p0 /\
       tout[@Fin1] ≃ p0 + p1 /\
-      isRight tout[@Fin2].
+      isVoid tout[@Fin2].
 
 Lemma Add_onto_Realise : Add_onto ⊨ Add_onto_Rel.
 Proof.
   eapply Realise_monotone.
   { unfold Add_onto. TM_Correct.
-    - apply Add_Realise.
-    - apply MoveValue_Realise with (X := positive) (Y := positive). }
+    - apply Add_Realise. }
   {
     intros tin ([], tout) H. intros p0 p1 Hp0 Hp1 Hright.
     TMSimp. modpon H. modpon H0. auto.

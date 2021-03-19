@@ -7,7 +7,7 @@
 (*         CeCILL v2 FREE SOFTWARE LICENSE AGREEMENT          *)
 (**************************************************************)
 
-(** ** Exponentiation is Diophantine *)
+(* ** Exponentiation is Diophantine *)
 
 Require Import Arith ZArith Lia.
 
@@ -21,6 +21,8 @@ From Undecidability.H10.Matija
   Require Import alpha.
 
 Set Implicit Arguments.
+
+Set Default Proof Using "Type".
 
 Local Notation expo := (mscal mult 1).
 

@@ -1,9 +1,10 @@
 Set Implicit Arguments.
-From Undecidability.HOU Require Export calculus.syntax std.std.
-Require Import Morphisms Omega Lia FinFun. 
+From Undecidability.HOU Require Import calculus.prelim calculus.terms calculus.syntax std.std.
+Require Import Morphisms Lia FinFun. 
 
+Set Default Proof Using "Type".
 
-(** * Semantics **)
+(* * Semantics **)
 Section Semantics.
 
   Context {X: Const}.
@@ -27,7 +28,7 @@ Section Semantics.
   Notation normal := (Normal step).
 
 
-  (** ** Compatibility Properties *)
+  (* ** Compatibility Properties *)
   Section CompatibilityProperties.
 
     Global Instance lam_proper: Proper (star step ++> star step) lam.
@@ -90,7 +91,7 @@ Section Semantics.
 
   End CompatibilityProperties.
 
-  (** ** Normality Characterisation *)
+  (* ** Normality Characterisation *)
   Section Normality.
 
     Lemma normal_var x: normal (var x).
@@ -178,7 +179,7 @@ Section Semantics.
   
 
 
-  (** ** Inversion Lemmas *)
+  (* ** Inversion Lemmas *)
   Section InversionLemmas.
   
     Lemma head_preserved s s':

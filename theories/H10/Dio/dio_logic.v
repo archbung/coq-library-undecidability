@@ -7,7 +7,7 @@
 (*         CeCILL v2 FREE SOFTWARE LICENSE AGREEMENT          *)
 (**************************************************************)
 
-(** 1) Object-level representation of Diophantine logic 
+(* 1) Object-level representation of Diophantine logic 
     2) Closure properties for Diophantine relations and functions 
     3) Tactics for the automagic recognition of Diophantine shapes
 *)
@@ -19,11 +19,14 @@ From Undecidability.Shared.Libs.DLW.Utils
 
 Set Implicit Arguments.
 
-(** Standard De Bruijn extension and De Bruijn projection *)
+Set Default Proof Using "Type".
+
+(* Standard De Bruijn extension and De Bruijn projection *)
 
 (* Fixpoint instead of Definition because of better unfolding properties *)
 
-Fixpoint de_bruijn_ext {X} (ν : nat -> X) x n { struct n } :=
+Definition de_bruijn_ext {X} (ν : nat -> X) x :=
+  fix dbe n :=
   match n with
     | 0   => x
     | S n => ν n
@@ -57,7 +60,7 @@ Definition df_op_sem (o : dio_op) :=
     | do_mul => and
   end.
 
-(** De Bruijn syntax for diophantine formulas of the form
+(* De Bruijn syntax for diophantine formulas of the form
 
        A,B ::= x ≐ ⌞n⌟ | x ≐ y | x ≐ y ⨢ z | x ≐ y ⨰ z | A ∧ B | A ∨ B | ∃A 
 
@@ -126,7 +129,7 @@ Section diophantine_logic_basics.
       rewrite Nat2Z.inj_succ; try rewrite Nat2Z.inj_add; unfold df_size_Z; fold df_size_Z; auto; try lia.
   Qed.
 
-  (** The semantics of Diophantine logic *)
+  (* The semantics of Diophantine logic *)
 
   Fixpoint df_pred f ν :=
     match f with
@@ -138,7 +141,7 @@ Section diophantine_logic_basics.
     end
   where "⟦ f ⟧" := (df_pred f).
 
-  (** Fixpoint equations if needed, for readability and confirmation *)
+  (* Fixpoint equations if needed, for readability and confirmation *)
 
   Fact df_pred_cst x n ν : ⟦x ≐ ⌞n⌟⟧ ν = (ν x = n).
   Proof. reflexivity. Qed.
@@ -172,7 +175,7 @@ Section diophantine_logic_basics.
         intros []; simpl; auto.
   Qed.
 
-  (** Renaming under binders *)
+  (* Renaming under binders *)
 
   Definition der_lift ρ x := match x with 0 => 0 | S x => S (ρ x) end.
 
@@ -192,7 +195,7 @@ Section diophantine_logic_basics.
   Fact df_ren_size_Z ρ f : df_size_Z f⦃ρ⦄ = df_size_Z f.
   Proof. do 2 rewrite df_size_Z_spec; f_equal; apply df_ren_size. Qed.
 
-  (** Renaming is compatible with semantics *)
+  (* Renaming is compatible with semantics *)
 
   Fact df_pred_ren f ν ρ : ⟦f⦃ρ⦄⟧ ν <-> ⟦f⟧ (fun x => ν (ρ x)).
   Proof.
@@ -210,7 +213,7 @@ End diophantine_logic_basics.
 Local Notation "⟦ f ⟧" := (df_pred f).
 Local Notation "f ⦃ ρ ⦄" := (df_ren ρ f).
 
-(** The notion of Diophantine relation, expressed as
+(* The notion of Diophantine relation, expressed as
     a rich term, ie an informative part together with
     a certificate. In this case, a relation R is 
     Diophantine when one can compute a Diophantine 
@@ -220,7 +223,7 @@ Local Notation "f ⦃ ρ ⦄" := (df_ren ρ f).
 Definition dio_rel R := { f | forall ν, ⟦f⟧ ν <-> R ν }.
 Notation 𝔻R := dio_rel.
 
-(** We establish closure properties of dio_rel / 𝔻R
+(* We establish closure properties of dio_rel / 𝔻R
     These are proved by explicitely giving the witnesses.
 
     But we will systematically avoid giving witnesses 
@@ -291,10 +294,10 @@ Section dio_rel_closure_properties.
 
 End dio_rel_closure_properties.
 
-(** From now on, we will quite systematically avoid directly
+(* From now on, we will quite systematically avoid directly
     manipulating the De Bruijn syntax *)
 
-(** It is often more convenient to work with Diophantine functions 
+(* It is often more convenient to work with Diophantine functions 
     instead of Diophantine relations, eg 
 
         f : nat -> nat is a Diophantine function 
@@ -366,13 +369,13 @@ Proof.
   + apply dio_rel_exst, dio_rel_conj; auto.
 Defined.
 
-(** Databases of Diophantine shapes *)
+(* Databases of Diophantine shapes *)
 
 Create HintDb dio_fun_db.        (* For closure props ending with 𝔻F _ *)
 Create HintDb dio_rel_db.        (* For closure props ending with 𝔻R _ *)
 Create HintDb dio_rel_im_db.     (* For immediate closure props ending with 𝔻R _ *)
 
-(** Automation tactics *)
+(* Automation tactics *)
 
 (* We want to try dio_fun_[var,cst,add_im,mul_im] ahead of everything else *)
 
@@ -428,7 +431,7 @@ Tactic Notation "by" "dio" "equiv" uconstr(f) :=
 Tactic Notation "dio" "by" "lemma" uconstr(f) :=
   intros; apply dio_rel_equiv with (1 := f); dio auto. 
 
-(** Start feeding the databases of Diophantine shapes *)
+(* Start feeding the databases of Diophantine shapes *)
 
 Hint Resolve dio_fun_var 
              dio_fun_cst 
@@ -439,7 +442,7 @@ Hint Resolve dio_rel_eq
              dio_rel_add dio_rel_add_sym
              dio_rel_mul dio_rel_mul_sym : dio_rel_im_db.
 
-(** We do not want dio_rel_[add,mul] is the dio_rel_db because
+(* We do not want dio_rel_[add,mul] is the dio_rel_db because
     they would superseed dio_fun_[plus,mult] *)
 
 Fact dio_fun_plus r t : 𝔻F r -> 𝔻F t -> 𝔻F (fun ν => r ν + t ν).
@@ -468,7 +471,7 @@ Proof. dio auto. Defined.
 (* Check example_eq. *)
 (* Eval compute in (proj1_sig example_eq). *)
 
-(** Now you can start witnessing the magic of 
+(* Now you can start witnessing the magic of 
     Diophantine shapes recognition *)
 
 Section True_False.
@@ -561,7 +564,7 @@ Defined.
 Hint Resolve dio_rel_neq 
              dio_rel_div : dio_rel_db.
 
-(** These example are better now *)
+(* These example are better now *)
 
 Local Fact example_le : 𝔻R (fun ν => ν 0 <= ν 1).
 Proof. dio auto. Defined.
@@ -583,7 +586,7 @@ Proof. dio auto. Defined.
 
 Section dio_fun_rem.
 
-  (** The remainder function is Diophantine 
+  (* The remainder function is Diophantine 
       Beware avoiding the duplication of x & p *)
 
   Let rem_equiv p x r : r = rem x p 
@@ -620,7 +623,7 @@ Proof. dio auto. Defined.
 
 Section dio_rel_ndivides.
 
-  (** The way it is done in the FSCD paper *)
+  (* The way it is done in the FSCD paper *)
 
   Let ndivides_eq x y : ~ (divides x y) <-> x = 0 /\ y <> 0 \/ exists a b, y = a*x+b /\ 0 < b < x.
   Proof.
@@ -654,7 +657,7 @@ Proof. apply dio_rel_ndivides; dio auto. Defined.
 
 Section dio_rel_not_divides.
 
-  (** A shorter way using already established rem *)
+  (* A shorter way using already established rem *)
 
   Let not_divides_eq p x : ~ divides p x <-> rem x p <> 0.
   Proof. rewrite divides_rem_eq; tauto. Qed.
@@ -674,10 +677,10 @@ Proof. dio auto. Defined.
 (* Check example_rem_strange. *)
 (* Eval compute in (proj1_sig example_rem_strange). *)
 
-(** We do not automate the remaining closure props here because
+(* We do not automate the remaining closure props here because
     they are used only once or twice elsewhere *) 
 
-(** Closure under composition is trivial with exists *)
+(* Closure under composition is trivial with exists *)
 
 Section dio_rel_compose.
 
@@ -686,7 +689,7 @@ Section dio_rel_compose.
              (HR : 𝔻R (fun ν => R (ν 0) ν⭳)).
 
   Lemma dio_rel_compose : 𝔻R (fun ν => R (f ν) ν).
-  Proof.
+  Proof using HR Hf.
     by dio equiv (fun v => exists y, y = f v /\ R y v).
     abstract(intros v; split;
      [ exists (f v); auto
@@ -701,7 +704,7 @@ Section dio_fun_compose.
            (g : nat -> nat)          (Hg : 𝔻F (fun ν => g (ν 0))).
 
   Lemma dio_fun_compose : 𝔻F (fun ν => g (f ν)).
-  Proof.
+  Proof using Hf Hg.
     red; by dio equiv (fun v => exists y, y = f v⭳ /\ v 0 = g y).
     abstract(intros; split;
      [ exists (f ν⭳); auto
@@ -710,7 +713,7 @@ Section dio_fun_compose.
 
 End dio_fun_compose.
 
-(** For the next two construction, we do the construction by 
+(* For the next two construction, we do the construction by 
     hand, ie manipulation witnesses, because we need an easy 
     computation of the size 
 
@@ -774,7 +777,7 @@ Section multiple_exists.
 
 End multiple_exists.
 
-(** We will also need a Diophantine encoding of finitary 
+(* We will also need a Diophantine encoding of finitary 
     conjunction ie 
 
           fun ν => R 0 ν /\ ... /\ R (n-1) ν 
@@ -828,5 +831,3 @@ Section dio_rel_finite_conj.
   Defined.
 
 End dio_rel_finite_conj.
-
-(* Check dio_rel_finite_conj. *)

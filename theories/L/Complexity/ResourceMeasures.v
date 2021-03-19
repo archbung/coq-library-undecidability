@@ -1,8 +1,8 @@
-From Undecidability.L Require Import Util.L_facts.
+From Undecidability.L Require Import Util.L_facts Seval.
 Require Import RelationClasses.
 
-(** * Resource Measures *)
-(** ** Big-Step Time Measure*)
+(* * Resource Measures *)
+(* ** Big-Step Time Measure*)
 
 Inductive timeBS : nat -> term -> term -> Prop :=
   timeBSVal s : timeBS 0 (lam s) (lam s)
@@ -11,7 +11,7 @@ Inductive timeBS : nat -> term -> term -> Prop :=
 
 Module Leftmost.
 
-  (** ** Leftmost reduction *)
+  (* ** Leftmost reduction *)
 
   Reserved Notation "s '≻lm' t" (at level 50).
 
@@ -39,7 +39,7 @@ Module Leftmost.
     end.
 
 
-  (** *** Small-Step_Lm Time Measure *)
+  (* *** Small-Step_Lm Time Measure *)
 
   Instance pow_step_lm_congL k:
     Proper ((pow step_lm k) ==> eq ==> (pow step_lm k)) app.
@@ -47,7 +47,7 @@ Module Leftmost.
     intros s t R u ? <-. revert s t R u.
     induction k;cbn in *;intros ? ? R ?. congruence. destruct R as [s' [R1 R2]].
     exists (app s' u). firstorder.
-  Defined.
+  Qed.
 
   Instance pow_step_lm_congR k:
     Proper (eq ==>(pow step_lm k) ==> (pow step_lm k)) (fun s t => app (lam s) t).
@@ -55,14 +55,14 @@ Module Leftmost.
     intros s ? <- t u R. revert s t u R.
     induction k;cbn in *;intros ? ? ? R. congruence. destruct R as [t' [R1 R2]].
     exists (app (lam s) t'). firstorder.
-  Defined.
+  Qed.
 
   Instance step_lm_step: subrelation step_lm step.
   Proof.
     induction 1;eauto using step.
   Qed.
 
-  (** *** Small-Step_Lm Space Measure *)
+  (* *** Small-Step_Lm Space Measure *)
 
   Definition redWithMaxSizeL := redWithMaxSize size step_lm.
 
@@ -84,7 +84,7 @@ Module Leftmost.
     -apply redWithMaxSizeR. cbn in *. lia. 
     -eapply redWithMaxSizeC. now eauto using step_lm. apply IHR. reflexivity.
      subst m m'. cbn -[plus]. repeat eapply Nat.max_case_strong;lia.
-  Defined.
+  Qed.
 
 
   Lemma step_lm_evaluatesIn s s' t k: s ≻lm s' -> timeBS k s' t -> timeBS (S k) s t.
@@ -123,7 +123,7 @@ Module Leftmost.
       eapply (rcomp_1 step_lm) in R'. eapply step_lm_evaluatesIn;eauto 10.
   Qed.
 
-  (** *** Big-Step_Lm Space Measure*)
+  (* *** Big-Step_Lm Space Measure*)
 
   Inductive spaceBS : nat -> term -> term -> Prop :=
     spaceBSVal s : spaceBS (size (lam s)) (lam s) (lam s)
@@ -249,6 +249,38 @@ Proof.
    +intros [(?&?&?) L]. eapply step_timeBS. all:eauto.
 Qed.
 
+Lemma timeBS_rect (P : nat -> term -> term -> Type)
+  (H0 : forall s : term, P 0 (lam s) (lam s))
+  (HR : forall (s s' t t' u : term) (i j k l : nat),
+      timeBS i s (lam s') ->
+        P i s (lam s') ->
+        timeBS j t (lam t') ->
+        P j t (lam t') ->
+        timeBS k (subst s' 0 (lam t')) u ->
+        P k (subst s' 0 (lam t')) u -> l = i + j + 1 + k -> P l (app s t) u):
+  forall k s t, timeBS k s t -> P k s t.
+Proof.
+  intros n. 
+  intros s t H'%timeBS_evalIn.
+  assert (H'':eval s t) by (eapply evalIn_eval_subrelation;eauto).
+  revert n H'.
+  induction H'' using eval_rect.
+  { intros []. easy. now intros H'%timeBS_evalIn;exfalso. }
+  intros n H'.
+  eapply informative_evalIn in H''1 as (?&H1).
+  eapply informative_evalIn in H''2 as (?&H2).
+  eapply informative_evalIn in H''3 as (?&H3).
+  destruct t'. 1,2:(now exfalso;destruct H2 as [? []]).
+  eapply HR. 1-6:try (eapply timeBS_evalIn); eauto.
+  eapply timeBS_evalIn in H'. inv H'.
+  apply timeBS_evalIn in H5. apply timeBS_evalIn in H6. apply timeBS_evalIn in H8.
+  do 3 lazymatch goal with
+  | H : ?s ⇓(_) _ , H' : ?s ⇓(_) _ |- _ =>
+  eapply evalIn_unique in H;[|exact H'];try destruct H as [-> [= ->]]
+   end.
+   nia.
+Qed.
+
 Lemma hasSpaceVal s : hasSpace (size (lam s)) (lam s).
 Proof.
   econstructor.
@@ -256,7 +288,7 @@ Proof.
   -intros ? (?&R&?). inv R. all:easy.
 Qed.
 
-(** TODO: decompose this into lemmata? *)
+(* TODO: decompose this into lemmata? *)
 
 Lemma hasSpaceBeta s s' m1 t t' m2 m3:
   hasSpace m1 s -> hasSpace m2 t ->

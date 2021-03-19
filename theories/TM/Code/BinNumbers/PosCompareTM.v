@@ -1,15 +1,15 @@
-(** * Machine for comparing two [positive] binary numbers *)
+(* * Machine for comparing two [positive] binary numbers *)
 
-From Undecidability Require Import ProgrammingTools.
+From Undecidability.TM Require Import ProgrammingTools.
 From Undecidability Require Import EncodeBinNumbers PosDefinitions PosPointers PosHelperMachines.
 
-(** Declare discreteness of [comparison] *)
+(* Declare discreteness of [comparison] *)
 Global Instance comparison_eq_dec : eq_dec comparison.
 Proof.
   intros. hnf. decide equality.
-Defined.
+Defined. (* because definition *)
 
-(** Declare finiteness of [comparison] *)
+(* Declare finiteness of [comparison] *)
 Global Instance comparison_finC : finTypeC (EqType comparison).
 Proof.
   apply (FinTypeC (enum := [Eq; Lt; Gt])).
@@ -17,8 +17,8 @@ Proof.
 Qed.
 
 Global Instance comparison_inhabited : inhabitedC comparison.
-Proof. repeat constructor. Defined.
-
+Proof. repeat constructor. Qed.
+  
 
 (* Thankfully, [Pos.compare] is already defined tail-recursively. We store the acku [r:comparison] in the state using [StateWhile]. *)
 
@@ -245,7 +245,7 @@ Proof.
 Qed.
 
 
-(** ** Maximum *)
+(* ** Maximum *)
 
 (* Call [Compare] and copy the maximum to the third tape. *)
 
@@ -254,7 +254,7 @@ Definition Max_Rel : pRel sigPos^+ comparison 3 :=
     forall (p0 p1 : positive),
       tin[@Fin0] ≃ p0 ->
       tin[@Fin1] ≃ p1 ->
-      isRight tin[@Fin2] ->
+      isVoid tin[@Fin2] ->
       tout[@Fin0] ≃ p0 /\
       tout[@Fin1] ≃ p1 /\
       tout[@Fin2] ≃ Pos.max p0 p1 /\
@@ -273,9 +273,7 @@ Proof.
   eapply Realise_monotone.
   { unfold Max. TM_Correct.
     - apply Compare_Realise.
-    - apply CopyValue_Realise with (X := positive).
-    - apply CopyValue_Realise with (X := positive).
-    - apply CopyValue_Realise with (X := positive). }
+  }
   {
     intros tin (yout, tout) H. cbn in *. intros p0 p1 Hp0 Hp1 HRight. TMSimp.
     modpon H. destruct ymid.

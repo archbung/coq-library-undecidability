@@ -261,9 +261,10 @@ Proof.
     exists x. eapply H. eauto.
 Qed.
 
-(** Typeclasses  *)
+(* Typeclasses  *)
 
 Definition L_T {X : Type} {f : nat -> list X} {H : list_enumerator__T f X} : nat -> list X.
+Proof.
   exact (cumul f).
 Defined.
 Arguments L_T _ {_ _} _, {_ _ _}.
@@ -299,7 +300,7 @@ Proof.
   intros [? H]. eapply H.
 Defined.
 
-(** Compatibility  *)
+(* Compatibility  *)
 
 Hint Unfold enumerable list_enumerable : core.
 

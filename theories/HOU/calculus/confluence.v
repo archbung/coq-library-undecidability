@@ -1,10 +1,11 @@
 Set Implicit Arguments.
 Require Import Morphisms Setoid.
 From Undecidability.HOU Require Import std.std.
-From Undecidability.HOU.calculus Require Export prelim.
-From Undecidability.HOU.calculus Require Import semantics.
+From Undecidability.HOU.calculus Require Import prelim terms semantics. 
 
-(** * Confluence *)
+Set Default Proof Using "Type".
+
+(* * Confluence *)
 Section Confluence.
 
   Context {X: Const}.
@@ -101,6 +102,7 @@ Section Confluence.
 
 
   Lemma confluence_step: confluent (@step X).
+  Proof.
     eapply TMT.
     eapply sandwich_step. eapply sandwich_steps.
     typeclasses eauto.

@@ -7,7 +7,7 @@
 (*         CeCILL v2 FREE SOFTWARE LICENSE AGREEMENT          *)
 (**************************************************************)
 
-(** ** Single Diophantine equations *)
+(* ** Single Diophantine equations *)
 
 Require Import List Arith Lia (* Nat *).
 
@@ -18,6 +18,8 @@ From Undecidability.H10.Dio
   Require Import dio_logic dio_elem.
 
 Set Implicit Arguments.
+
+Set Default Proof Using "Type".
 
 Local Notation "∑" := (msum plus 0).
 
@@ -388,7 +390,7 @@ End dio_poly_pos.
 
 Section dio_poly_inst_par.
 
-  Variable (V P E : Set) (σ : P -> nat). (** E is any empty type *)
+  Variable (V P E : Set) (σ : P -> nat). (* E is any empty type *)
 
   Fixpoint dp_inst_par (p : dio_polynomial V P) : dio_polynomial V E :=
     match p with
@@ -442,5 +444,3 @@ Section dio_poly_proj_par.
   Qed.
       
 End dio_poly_proj_par.
-
-

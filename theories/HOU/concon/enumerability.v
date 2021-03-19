@@ -1,10 +1,12 @@
 Set Implicit Arguments.
-Require Import List Omega Lia.
-From Undecidability.HOU Require Import std.std calculus.calculus concon.conservativity unification.unification.
+Require Import List Lia.
+From Undecidability.HOU Require Import calculus.calculus concon.conservativity unification.unification.
 
-(** * Enumerability from Conservativity *)
+Set Default Proof Using "Type".
 
-(** ** Nth-Order Unification  *)
+(* * Enumerability from Conservativity *)
+
+(* ** Nth-Order Unification  *)
 Section ListEnumerabilityOrdered.
 
   Variable (X: Const).  
@@ -97,7 +99,7 @@ Section ListEnumerabilityOrdered.
 
   Global Instance enumT_orduni n:
     enumT (orduni n X).
-  Proof with eauto using cum_ge'.
+  Proof using enumX with eauto using cum_ge'.
     exists (L_orduni n).
     - eauto.
     - intros [Gamma s t A H1 H2].
@@ -124,7 +126,7 @@ Proof.
 Qed.
 
 
-(** ** System Unification *)
+(* ** System Unification *)
 From Undecidability.HOU Require Import unification.systemunification.
 
 Section ListEnumerabilitySystems.
@@ -150,7 +152,7 @@ Section ListEnumerabilitySystems.
     
   Global Instance enumT_sys:
     enumT (sysuni X).
-  Proof with eauto using cum_ge'.
+  Proof using enumX with eauto using cum_ge'.
     exists L_sys.
     - eauto.
     - intros [Gamma E L H]. induction H using eqs_typing_strong_ind.
@@ -181,7 +183,7 @@ Proof.
 Qed.
 
 
-(** ** Nth-Order System Unification *)
+(* ** Nth-Order System Unification *)
 Section ListEnumerabilityOrderedSystems.
 
   Variable (X: Const).
@@ -206,7 +208,7 @@ Section ListEnumerabilityOrderedSystems.
     
   Instance enumT_ordsys n:
     enumT (ordsysuni X n).
-  Proof with eauto using cum_ge'.
+  Proof using enumX with eauto using cum_ge'.
     exists (L_ordsys n).
     - eauto.
     - intros [Gamma E L H]. induction H using eqs_ordertyping_strong_ind.

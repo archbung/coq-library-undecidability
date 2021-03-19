@@ -2,7 +2,7 @@ From Undecidability.L.Computability Require Export Scott Acceptability.
 Import Undecidability.L.Prelim.ARS.ARSNotations.
 Import L_Notations.
 
-(** * The self halting problem is not L-acceptable *)
+(* * The self halting problem is not L-acceptable *)
 
 Definition self_diverging (s : term) := ~ pi s s.
 
@@ -23,7 +23,7 @@ Proof.
   destruct H. unfold proc in *. tauto.
 Qed.
 
-(** * Rice's Theorem *)
+(* * Rice's Theorem *)
 
 Lemma Rice1 (M : term -> Prop) : (M <=1 proc) ->
                                  (forall (s t : term), proc t -> M s -> (forall u, pi s u <-> pi t u) -> M t) ->
@@ -54,12 +54,12 @@ Proof with eauto; try now intuition.
   transitivity (pi u vs /\ proc s).
   { 
     split; intros [R cls_s];(split;[|Lproc]).
-    -revert R. eapply converges_proper. symmetry. subst v. Lsimpl.
-    -revert R. eapply converges_proper. subst v. Lsimpl.
+    -revert R. eapply converges_proper. symmetry. subst v. now Lsimpl.
+    -revert R. eapply converges_proper. subst v. now Lsimpl.
   }
 
   transitivity (M vs /\ proc s).
-  split; intros [? ?]; intuition; try (now rewrite Hu). apply Hu;tauto. 
+  split; intros [? ?]; intuition; try (now rewrite Hu).  (* apply Hu;tauto. *)
   
   {
     split.
@@ -67,7 +67,7 @@ Proof with eauto; try now intuition.
       intros [w [Hw lw]]. 
       assert (forall t, pi vs t <-> pi t2 t). {
         intros t. eapply converges_proper.
-        assert (closed w). eapply (equiv_lambda lw) in Hw. eapply closed_star. exact Hw. Lproc. subst vs. Lsimpl. rewrite Hw. Lsimpl. 
+        assert (closed w). eapply (equiv_lambda lw) in Hw. eapply closed_star. exact Hw. Lproc. subst vs. Lsimpl_old. rewrite Hw. now Lsimpl. 
       }
       eapply nMt2. eapply M_cl_equiv; eassumption.
     - intros [npi_s_s cls_s]; intuition.
@@ -75,7 +75,7 @@ Proof with eauto; try now intuition.
         intros t; split; intros H'.
         - exfalso. destruct H' as [w [Hw lw]]. inv lw. eapply Omega_diverges. rewrite <- Hw. symmetry. clear Hw. now redStep.
         - exfalso. eapply npi_s_s.
-          assert (A: converges (lam ( t2 (enc t)) (s (enc s)))). revert H'. eapply converges_proper. symmetry. unfold vs. Lsimpl.
+          assert (A: converges (lam ( t2 (enc t)) (s (enc s)))). revert H'. eapply converges_proper. symmetry. unfold vs. now Lsimpl_old.
           eapply app_converges in A. firstorder.
       }
                                                        subst vs.
@@ -111,8 +111,8 @@ Proof.
   transitivity (pi u vs /\ proc s).
   {
     split; intros [R cls_s];(split;[|Lproc]).
-    -revert R. eapply converges_proper. symmetry. subst v. Lsimpl.
-    -revert R. eapply converges_proper. subst v. Lsimpl.
+    -revert R. eapply converges_proper. symmetry. subst v. now Lsimpl.
+    -revert R. eapply converges_proper. subst v. now Lsimpl.
   }
 
   transitivity (~ M vs /\ proc s).
@@ -126,7 +126,7 @@ Proof.
       intros [w [Hw lw]]. 
       assert (forall t, pi t1 t <-> pi vs t). {
         intros t. symmetry. assert (closed w). eapply closed_star. eapply equiv_lambda;eauto. Lproc.  eapply converges_proper.
-        transitivity (lam ( t1 (enc t)) (s (enc s))). unfold vs. Lsimpl. rewrite Hw. Lsimpl.
+        transitivity (lam ( t1 (enc t)) (s (enc s))). unfold vs. now Lsimpl_old. rewrite Hw. now Lsimpl.
       }
       eapply Mvs. eapply M_cl_equiv;try subst vs; try Lproc; try eassumption.
     - intros [npi_s_s cls_s]; intuition.
@@ -134,7 +134,7 @@ Proof.
         intros t; split; intros A.
         - exfalso. destruct A as [w [Hw lw]]. inv lw. eapply Omega_diverges. rewrite <- Hw. symmetry. clear Hw. now LsimplRed.
         - exfalso. eapply npi_s_s.
-          assert (B: converges (lam ( t1 (enc t)) (s (enc s)))). revert A. eapply converges_proper. symmetry. unfold vs. Lsimpl.
+          assert (B: converges (lam ( t1 (enc t)) (s (enc s)))). revert A. eapply converges_proper. symmetry. unfold vs. Lsimpl_old.
           eapply app_converges in B. firstorder.
       }
       eapply nMLO.
@@ -142,7 +142,7 @@ Proof.
   }
 Qed.
 
-(** ** Rice's Theorem, classical *)
+(* ** Rice's Theorem, classical *)
 
 Theorem Rice (M : term -> Prop) : (M <=1 proc) ->
                                  (forall (s t : term), proc t -> M s -> (forall u, pi s u <-> pi t u) -> M t) ->
@@ -160,7 +160,7 @@ Proof.
    intros A. destruct A as [? [H l]]. inv l. eapply Omega_diverges. rewrite <- H. clear H. symmetry. now redSteps.
 Qed.
 
-(** * Applications of Rice's Theorem *)
+(* * Applications of Rice's Theorem *)
 
 Goal ~ ldec (fun s => proc s /\ forall t, pi s t).
 Proof.
@@ -183,7 +183,7 @@ Proof.
   - split. Lproc. exists I. eapply lamOmega. 
 Qed.
 
-(** * Rice's Theorem, classical, on combinators *)
+(* * Rice's Theorem, classical, on combinators *)
 
 Theorem Rice_classical (M : term -> Prop) : (M <=1 closed) ->
                                  (forall (s t : term), closed t -> M s -> (forall u, pi s u <-> pi t u) -> M t) ->

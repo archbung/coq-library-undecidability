@@ -3,7 +3,7 @@ From Undecidability.L.Datatypes Require Import LNat Lists LFinType.
 
 Require Import Undecidability.Shared.Libs.PSL.Vectors.Vectors.
 
-(** *** Encoding vectors *)
+(* *** Encoding vectors *)
 
 Instance register_vector X `{registered X} n : registered (Vector.t X n).
 Proof.
@@ -13,7 +13,7 @@ Proof.
   - intros y. clear H. revert h x IHx. pattern n, y. revert n y.
     eapply Vector.caseS. intros h n y h0 x IHx [=].
     subst. f_equal. eapply IHx. eassumption.
-Defined.
+Defined. (*because registerAs*)
 
 
 Lemma enc_vector_eq X `{registered X} m (x:Vector.t X m):

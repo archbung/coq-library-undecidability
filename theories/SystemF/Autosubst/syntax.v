@@ -3,11 +3,14 @@ Require Import Undecidability.SystemF.SysF.
 
 Require Import Morphisms.
 
+Set Default Proof Using "Type".
+Set Default Goal Selector "!".
+
 Local Notation "f === g" := (fext_eq f g) (at level 80).
 
 Section pure_term.
 (*
-(** pure lambda-terms M, N, .. *)
+(* pure lambda-terms M, N, .. *)
 Inductive pure_term : Type :=
   | pure_var : nat -> pure_term 
   | pure_app : pure_term -> pure_term -> pure_term 
@@ -190,7 +193,7 @@ End pure_term.
 
 Section poly_type.
 (*
-(** polymorphic types s, t, ..*)
+(* polymorphic types s, t, ..*)
 Inductive poly_type : Type :=
   | poly_var : nat -> poly_type 
   | poly_arr : poly_type -> poly_type -> poly_type 
@@ -371,7 +374,7 @@ End poly_type.
 
 Section term.
 
-(** system F terms P, Q, .. *)
+(* system F terms P, Q, .. *)
 Inductive term : Type :=
   | var : nat -> term  
   | app : term -> term -> term  

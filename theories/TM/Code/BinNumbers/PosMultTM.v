@@ -1,6 +1,6 @@
-(** * Multiplication of [positive] numbers *)
+(* * Multiplication of [positive] numbers *)
 
-From Undecidability Require Import ProgrammingTools.
+From Undecidability.TM Require Import ProgrammingTools.
 From Undecidability Require Import BinNumbers.EncodeBinNumbers.
 From Undecidability Require Import BinNumbers.PosDefinitions.
 From Undecidability Require Import BinNumbers.PosPointers.
@@ -13,7 +13,7 @@ From Undecidability Require Import BinNumbers.PosShiftTM.
 Local Open Scope positive_scope.
 
 
-(** ** Tail-recursive multiplication function *)
+(* ** Tail-recursive multiplication function *)
 
 (* The function [Pos.mult] isn't tail-recursive. *)
 
@@ -36,7 +36,7 @@ Definition mult_TR (x y : positive) : positive := mult_TR_cont (shift_left y (po
 
 
 (* (* NB: Haskell extraction is fun! *)
-From Coq Require Extraction.
+From Coq From Undecidability Require Extraction.
 Extraction Language Haskell.
 Recursive Extraction mult_TR Pos.mul.
 *)
@@ -68,7 +68,7 @@ Lemma mult_TR_correct (x y : positive) : mult_TR x y = x * y.
 Proof. unfold mult_TR. apply (proj1 (mult_TR_cont_correct 42 x y)). Qed.
 
 
-(** ** Multiplication Machine *)
+(* ** Multiplication Machine *)
 
 (* This is rather easy, because we only iterate over [x]. We only add zeros to [y]. *)
 (* We can use the variant [Add'] (without internal tapes), because we maintain the invariant that [y<a]. *)
@@ -229,7 +229,7 @@ Definition Mult_Rel : pRel sigPos^+ unit 3 :=
     forall (x y : positive),
       tin[@Fin0] ≃ x ->
       tin[@Fin1] ≃ y ->
-      isRight tin[@Fin2] ->
+      isVoid tin[@Fin2] ->
       tout[@Fin0] ≃ x /\
       tout[@Fin1] ≃ y /\
       tout[@Fin2] ≃ x*y.
@@ -255,7 +255,6 @@ Lemma Mult_Realise : Mult ⊨ Mult_Rel.
 Proof.
   eapply Realise_monotone.
   { unfold Mult. TM_Correct.
-    - apply CopyValue_Realise with (X := positive).
     - apply ShiftLeft_num_Realise.
     - apply GoToLSB_start_Realise.
     - apply Mult_Loop_Realise.

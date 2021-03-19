@@ -1,6 +1,6 @@
-From Undecidability Require Import TM.Util.Prelim TM.Util.TM_facts.
+From Undecidability.TM Require Import Util.Prelim Util.TM_facts.
 
-(** * 0-tape Turing machine that does nothing. *)
+(* * 0-tape Turing machine that does nothing. *)
 
 Section Mono_Nop.
 
@@ -28,10 +28,10 @@ Arguments Null {sig}.
 Arguments Null_Rel { sig } x y / : rename.
 
 
-(** ** Tactic Support *)
+(* ** Tactic Support *)
 
 Ltac smpl_TM_Null :=
-  lazymatch goal with
+  once lazymatch goal with
   | [ |- Null ⊨ _] => eapply RealiseIn_Realise; eapply Null_Sem
   | [ |- Null ⊨c(_) _] => eapply Null_Sem
   | [ |- projT1 (Null) ↓ _] => eapply RealiseIn_TerminatesIn; eapply Null_Sem

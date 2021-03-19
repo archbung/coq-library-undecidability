@@ -2,15 +2,16 @@ Set Implicit Arguments.
 
 From Equations Require Import Equations.
 Require Import List Lia Arith Wf Morphisms Program.Program.
-From Undecidability.HOU Require Import std.std unification.unification calculus.calculus concon.concon.
+From Undecidability.HOU Require Import unification.unification concon.conservativity calculus.calculus.
 Import ListNotations.
 
 Tactic Notation "simplify" := Undecidability.HOU.std.tactics.simplify.  
 
+Set Default Proof Using "Type".
 
-(** * First-Order Unification *)
+(* * First-Order Unification *)
 
-(** ** Singlepoint Substitution *)
+(* ** Singlepoint Substitution *)
 Section Update.
 
   Context {X: Const}.
@@ -71,7 +72,7 @@ Section Update.
 End Update.
 
 
-(** ** Lambda-Freeness *)
+(* ** Lambda-Freeness *)
 Section LambdaFreeness.
 
   Context {X: Const}.
@@ -163,7 +164,7 @@ Section LambdaFreeness.
 
 End LambdaFreeness.
 
-(** ** Simplified First-Order Unification *)
+(* ** Simplified First-Order Unification *)
 Hint Constructors lambda_free : core. 
 Section Unification.
 
@@ -178,7 +179,7 @@ Section Unification.
     (forall x, bound x -> sigma x = var x) /\
     (forall x, free x -> forall y, y ∈ vars (sigma x) -> free y).
 
-  (** *** Term Decompositon *)
+  (* *** Term Decompositon *)
   Section Decomposition.
     
     Fixpoint decomp s t: option (eqs X) :=
@@ -394,7 +395,7 @@ Section Unification.
 
 
 
-  (** *** Unification Relation *)
+  (* *** Unification Relation *)
   Reserved Notation "E ↦ sigma" (at level 80).
 
   Inductive unify E: (fin -> exp X) -> Prop :=
@@ -407,7 +408,7 @@ Section Unification.
       E ↦ update x (sigma • s) sigma
   where "E ↦ sigma" := (unify E sigma).
 
-  (** *** Computability *)
+  (* *** Computability *)
   Section Computability.
 
     Definition subvars := MR strict_incl (@Vars' X).
@@ -529,7 +530,7 @@ Section Unification.
     Lemma equi_unifiable_cons x s E:
       (var x, s) :: E ≈ (var x, s) :: (update x s var •₊₊ E).
     Proof.
-      intros ?; simplify; intuition; cbn in *.
+      intros ?; simplify; intuition idtac; cbn in *.
       - intros [u v] ?; mapinj; cbn; destruct x0 as [u' v'].
         injection H2 as <- <-. eapply H1 in H3; cbn in H3.
         unfold unifies in *; cbn in *.
@@ -575,7 +576,7 @@ Section Unification.
 
 
 
-  (** *** Soundness *)
+  (* *** Soundness *)
   Section Soundness.
     Lemma unify_lambda_free E sigma:
       E ↦ sigma -> all_terms (@lambda_free X) E -> forall x, lambda_free (sigma x).
@@ -630,7 +631,7 @@ Section Unification.
     Lemma unify_typing E L sigma:
       E ↦ sigma -> all_terms (@lambda_free X) E ->
       Gamma ⊢₊₊(1) E : L -> Gamma ⊩(1) sigma : Gamma.
-    Proof.
+    Proof using HO.
       induction 1 in L |-*.
       - intros; now eapply var_typing. 
       - intros LF T. eapply decomp'_typing in T as T'; eauto. 
@@ -648,7 +649,7 @@ Section Unification.
     
   End Soundness.
 
-  (** *** Completeness *)
+  (* *** Completeness *)
   Section Completeness.
 
     Lemma decomp_none_not_unifiable sigma s t:
@@ -712,7 +713,7 @@ Section Unification.
       - rewrite IHs. f_equal. f_equal. clear IHs.  generalize (vars s) as A.
         induction A as [|[] ?]; cbn; eauto.
         + destruct eq_dec; rewrite IHA; intuition.
-        + destruct eq_dec; rewrite IHA. intuition. cbn.
+        + destruct eq_dec; rewrite IHA. intuition. lia. cbn.
           unfold funcomp at 1; now rewrite size_ren. 
       - rewrite IHs1, IHs2; lia.
     Qed.
@@ -731,7 +732,7 @@ Section Unification.
 
     Lemma unifies_free sigma x s:
       ~ x ∈ vars s -> free' sigma -> unifies sigma (var x) s -> free x.
-    Proof.
+    Proof using isFree.
       intros H1 F H2; unfold unifies in *; cbn in *.
       destruct F as [F1 F2]. destruct (isFree x) as [H|H]; eauto.
       eapply F1 in H as H'. rewrite H' in H2.
@@ -745,7 +746,7 @@ Section Unification.
     Lemma unifies_free_all sigma x s:
       ~ x ∈ vars s -> free' sigma -> free x ->
       unifies sigma (var x) s -> (forall y, y ∈ vars s -> free y) .
-    Proof.
+    Proof using isFree.
       intros H1 F H2 H3 y H4; unfold unifies in *; cbn in *.
       destruct F as [F1 F2]. destruct (isFree y) as [H|H]; eauto.
       specialize (F2 _ H2) as H5. rewrite H3 in H5. eapply H5.
@@ -779,7 +780,7 @@ Section Unification.
 
     Lemma unify_complete sigma E:
       free' sigma -> Unifies sigma E -> all_terms (@lambda_free X) E -> exists tau, E ↦ tau.
-    Proof.
+    Proof using isFree.
       intros F; 
         induction E as [E IH] using eqs_size_induction; intros U LF.
       destruct (decomp' E) as [[| [t s] E']|] eqn: DE.
@@ -813,7 +814,7 @@ End Unification.
 
 
 
-(** ** Retyping *)
+(* ** Retyping *)
 Section Retyping.
 
   Variable (X: Const).
@@ -885,20 +886,16 @@ Section Retyping.
         destruct dec2; intuition.
   Qed.
 
-
-  Program Instance retype n (I: orduni n X) : orduni n X :=
-    { Gamma₀ := retype_ctx n (Gamma₀ I);
+  Instance retype n (I: orduni n X) : orduni n X.
+  Proof.
+    refine {|
+      Gamma₀ := retype_ctx n (Gamma₀ I);
       s₀ := eta₀ (s₀ I) H1₀;
       t₀ := eta₀ (t₀ I) H2₀;
-      A₀ := retype_type n (A₀ I) }.
-  Next Obligation.
-    eapply normal_retyping. all: eauto using eta₀_normal, eta₀_typing.
-  Qed.
-  Next Obligation.
-    eapply normal_retyping. all: eauto using eta₀_normal, eta₀_typing.
-  Qed.
-
-
+      A₀ := retype_type n (A₀ I) |}.
+    - abstract (eapply normal_retyping; [apply eta₀_normal | apply eta₀_typing]).
+    - abstract (eapply normal_retyping; [apply eta₀_normal | apply eta₀_typing]).
+  Defined.
 
   Lemma retype_iff n (I: orduni n X):
     1 <= n -> OU n X I <-> OU n X (@retype n I).
@@ -917,7 +914,7 @@ Section Retyping.
 End Retyping.
 
 
-(** ** Full First-Order Unification  *)
+(* ** Full First-Order Unification  *)
 Section FirstOrderDecidable.
 
   Variable (X: Const).
@@ -985,18 +982,17 @@ Section FirstOrderDecidable.
     1 - 2: rewrite Nat.sub_add;
       eauto; asimpl; rewrite subst_extensional with (tau := var); [now asimpl|].
     1 - 2: intros y ? % H3; unfold free in *; eauto; unfold funcomp; f_equal; lia.
-    1 - 2: rewrite it_up_lt; eauto; symmetry; eapply H2; unfold bound, free; intuition. 
+    1 - 2: rewrite it_up_lt; eauto; symmetry; eapply H2; unfold bound, free; intuition; lia.
   Qed.
 
 
   Lemma it_up_free' k (sigma: fin -> exp X): free' (free k) (it k up sigma).
   Proof.
     unfold free; split; intros x; unfold bound.
-    - intros ?; rewrite it_up_lt; intuition.
+    - intros ?; rewrite it_up_lt; intuition. lia.
     - intros ? y. rewrite it_up_ge; eauto. 
       intros [z [->]] % vars_varof % varof_ren; eauto.
   Qed.
-
 
 
   Lemma firstorder_decidable' (I: orduni 1 X):
@@ -1031,7 +1027,8 @@ Section FirstOrderDecidable.
       * specialize decr_typing with (L := rev L) as H9; simplify in H9; eauto. 
       * eapply decr_unifies; eauto.
         specialize (unify_unifiable H' (AppR s T, AppR t T0)); cbn; intuition.
-      * eapply lambda_free_normal, decr_lambda_free; intros; eapply LF.
+      * eapply lambda_free_normal. pose proof (free := fun (k: nat) (x: nat) => x >= k).
+        eapply decr_lambda_free; intros; eapply LF.
     + intros (Delta & sigma & E1 & E2 & E3).  asimpl in E2. 
       eapply Lambda_injective in E2.
       edestruct unify_complete with (sigma := it (|L|) up sigma)

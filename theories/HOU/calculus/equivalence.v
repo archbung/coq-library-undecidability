@@ -1,14 +1,19 @@
 Set Implicit Arguments.
-Require Import Morphisms Omega Lia FinFun.
-From Undecidability.HOU Require Export std.std calculus.syntax calculus.semantics calculus.confluence. 
+Require Import Morphisms Lia FinFun.
+From Undecidability.HOU Require Import std.std.
+From Undecidability.HOU.calculus Require Import 
+  prelim terms syntax semantics confluence. 
 
-(** * Equational Theory *)
+
+Set Default Proof Using "Type".
+
+(* * Equational Theory *)
 Section Equivalence.
   Context {X: Const}.
   Notation "s ≡ t" := (equiv (@step X) s t) (at level 70).
 
 
-  (** ** Compatibility Properties *)
+  (* ** Compatibility Properties *)
   Section CompatibilityProperties.
     
     Global Instance equiv_lam_proper:
@@ -69,7 +74,7 @@ Section Equivalence.
 
   End CompatibilityProperties.
 
-  (** ** Injectivity Properties *)
+  (* ** Injectivity Properties *)
   Section InjectivityProperties.
 
     Lemma equiv_var_eq (x y: fin):
@@ -120,7 +125,7 @@ Section Equivalence.
   
   End InjectivityProperties.
 
-  (** ** Disjointness Properties *)
+  (* ** Disjointness Properties *)
   Section DisjointnessProperties.
 
     Lemma equiv_neq_var_app (x: nat) (s t: exp X):
@@ -185,7 +190,7 @@ Section Equivalence.
   End DisjointnessProperties.
 
 
-  (** ** Huet Definition *)
+  (* ** Huet Definition *)
   Section HuetDefinition.
     Variable (s t v1 v2: exp X).
     Hypothesis (E1: s ▷ v1) (E2: t ▷ v2).
@@ -193,7 +198,7 @@ Section Equivalence.
 
     Lemma equiv_huet_forward:
       s ≡ t ->  v1 = v2.
-    Proof.
+    Proof using E1 E2.
       destruct E1 as [H1 N1], E2 as [H2 N2].
       intros H; eapply equiv_unique_normal_forms; eauto.
       now rewrite <-H1, <-H2.  
@@ -201,7 +206,7 @@ Section Equivalence.
 
     Lemma equiv_huet_backward:
       v1 = v2 -> s ≡ t.
-    Proof.
+    Proof using E1 E2.
       intros; subst; destruct E1, E2; eapply equiv_join; eauto. 
     Qed.
   End HuetDefinition.

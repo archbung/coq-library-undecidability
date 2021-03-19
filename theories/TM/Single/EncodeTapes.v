@@ -1,6 +1,6 @@
-From Undecidability Require Import ProgrammingTools.
+From Undecidability.TM Require Import ProgrammingTools.
 
-From Undecidability Require Export PrettyBounds.SizeBounds.
+From Undecidability.TM.PrettyBounds Require Export SizeBounds.
 
 From Undecidability Require Import TM.Util.VectorPrelim.
 
@@ -13,7 +13,7 @@ Inductive sigTape (sig : Type) : Type :=
 | UnmarkedSymbol (s : sig).
 
 Instance sigTape_eq (sig : Type) : eq_dec sig -> eq_dec (sigTape sig).
-Proof. intros. hnf. decide equality; now apply Dec; auto. Defined.
+Proof. intros. hnf. decide equality; now apply Dec; auto. Defined. (* because definition *)
 
 Arguments LeftBlank {sig} marked.
 Arguments RightBlank {sig} marked.
@@ -53,7 +53,7 @@ Definition isLeftBlank {sig : Type} (s : sigTape sig) : bool :=
   | _ => false
   end.
 
-Definition isRightBlank {sig : Type} (s : sigTape sig) : bool :=
+Definition isVoidBlank {sig : Type} (s : sigTape sig) : bool :=
   match s with
   | RightBlank _ => true
   | _ => false
@@ -85,7 +85,7 @@ Instance Encode_tape (sig : Type) : codable (sigTape sig) (tape sig) :=
 (* Compute encode_tape (rightof 3 [2;1]). *)
 
 
-(** Moving does not change the number of symbols. *)
+(* Moving does not change the number of symbols. *)
 Goal forall (sig : Type) (m : move) (t : tape sig), length (encode_tape (tape_move t m)) = length (encode_tape t).
 Proof.
   intros.
@@ -122,7 +122,7 @@ Proof.
     + split. apply Vector.nil. apply Vector.nil.
     + specialize (split_vector X n' v' k') as (rec1&rec2).
       split. apply Vector.cons. apply x. apply rec1. apply rec2.
-Defined.
+Defined. (* because definition *)
 
 
 Lemma vector_cast_refl (X : Type) (n1 : nat) (H1 : n1 = n1) (v : Vector.t X n1) :

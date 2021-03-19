@@ -1,10 +1,12 @@
 Set Implicit Arguments.
-Require Import List Omega Lia.
+Require Import List Lia.
 From Undecidability.HOU Require Import std.std calculus.calculus unification.higher_order_unification unification.nth_order_unification.
 
-(** * Enumerability *)
+Set Default Proof Using "Type".
 
-(** ** Terms, Types and Contexts *)
+(* * Enumerability *)
+
+(* ** Terms, Types and Contexts *)
 Section ListEnumerability.
   Variable (X: Const).
 
@@ -23,7 +25,7 @@ Section ListEnumerability.
     end.
   
   Global Instance enumT_exp: enumT (exp X). 
-  Proof.
+  Proof using enumX.
     exists L_exp.
     - eauto. 
     - induction x as [y|c|s| s IH1 t IH2].
@@ -56,7 +58,7 @@ Section ListEnumerability.
         in_app 5. in_collect (A, B); eapply cum_ge'; eauto. 
   Qed.
 
-  (** ** Typing Proofs *)
+  (* ** Typing Proofs *)
   Fixpoint L_typingT Gamma s A n : list (Gamma ⊢ (s: exp X) : A) :=
     match n with
     | 0 => nil
@@ -130,7 +132,7 @@ Section ListEnumerability.
 
   Global Instance enumT_uni :
     enumT (uni X).
-  Proof with eauto using cum_ge'.
+  Proof using enumX with eauto using cum_ge'.
     exists L_uni.
     - eauto.
     - intros [Gamma s t A H1 H2].
@@ -151,7 +153,7 @@ Section ListEnumerability.
                     ++ [(Delta, s .: sigma, A :: Gamma) | ((Delta, sigma, Gamma), (Delta', s, A)) ∈ (L_subst (S >> tau) n × L_typing n), Delta = Delta']
     end.
 
-  (** ** Substitutions *)
+  (* ** Substitutions *)
   Lemma enum_substs tau:
     enum (fun '(Delta, sigma, Gamma) => Delta ⊩ (sigma: fin -> exp X) : Gamma /\ forall x, x >= | Gamma | -> sigma x = tau x) (L_subst tau).
   Proof.
@@ -193,6 +195,7 @@ Section ListEnumerability.
     end.
 
   Lemma enum_unification' : enum Uextended L_Uextended.
+  Proof.
     split; eauto.
     intros [[I Delta] sigma]. unfold Uextended; cbn; split.
     - intros (H3 & H4 & H5). destruct (el_T I) as [x1].
@@ -231,7 +234,7 @@ End ListEnumerability.
 
 
 
-(** ** Higher-Order Unification *)
+(* ** Higher-Order Unification *)
 Theorem enumerable_unification (X: Const): enumerable__T X -> enumerable (U X).
 Proof.
   rewrite enum_enumT. intros [EX].

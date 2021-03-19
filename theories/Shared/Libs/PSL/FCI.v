@@ -1,6 +1,6 @@
 From Undecidability.Shared.Libs.PSL Require Import Lists.Cardinality Numbers.
 
-(** ** Finite inductive predicates *)
+(* ** Finite inductive predicates *)
 
 Section Fip.
   Variables (X: eqType) (sigma: list X -> X -> bool) (R: list X).
@@ -64,7 +64,7 @@ Section Fip.
 
 End Fip.
 
-(** ** Finite closure iteration *)
+(* ** Finite closure iteration *)
 
 Module FCI.
 Section FCI.
@@ -81,6 +81,7 @@ Section FCI.
   Qed.
 
   Definition F (A : list X) : list X.
+  Proof.
     destruct (pick A) as [[x _]|_].
     - exact (x::A).
     - exact A.

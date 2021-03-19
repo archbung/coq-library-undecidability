@@ -10,6 +10,7 @@
 Require Import List Arith Lia Max.
 
 Require Import Undecidability.Synthetic.Definitions Undecidability.Synthetic.ReducibilityFacts.
+Require Import Undecidability.Synthetic.InformativeDefinitions Undecidability.Synthetic.InformativeReducibilityFacts.
 
 From Undecidability.Shared.Libs.DLW.Utils
   Require Import utils_tac utils_list utils_nat finite.
@@ -31,7 +32,7 @@ From Undecidability.TRAKHTENBROT
 
 Set Implicit Arguments.
 
-(** * Collection of high-level synthetic decidability results *)
+(* * Collection of high-level synthetic decidability results *)
 
 Section Sig_MONADIC_Sig_11.
 
@@ -57,7 +58,7 @@ Print Assumptions FSAT_FULL_MONADIC_FSAT_11. *)
 
 Section FSAT_MONADIC_DEC.
 
-  (** No variables and uniform arity of 1 is decidable 
+  (* No variables and uniform arity of 1 is decidable 
       Signature must be discrete  *)
 
   Variable (F P : Type) 

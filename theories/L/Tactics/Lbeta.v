@@ -2,14 +2,15 @@ From Undecidability.L Require Import Util.L_facts.
 Require Import ListTactics.
 From Undecidability.L.Tactics Require Import Lproc Reflection. 
 
-(** *** Lbeta: symbolic beta reduction *)
+(* *** Lbeta: symbolic beta reduction *)
 
-(** This module procides tactics to simlify L-term w.r.t beta reduction in L.
+(* This module procides tactics to simlify L-term w.r.t beta reduction in L.
 It does so by the reflective tactic simplify_L' using the module Reflextion. *)
 
 Lemma eval_helper s t u: s >* u -> eval u t -> eval s t.
+Proof.
   intros R H. now rewrite R.
-Defined.
+Qed.
 
 Ltac addToList a l := AddFvTail a l.
 
@@ -27,12 +28,12 @@ Proof.
    +lia.
    +reflexivity.
   -Lproc.
-Defined.
+Qed.
 
 Lemma eval_refl s : lambda s -> s ⇓ s.
 Proof.
   intros. split. reflexivity. Lproc.
-Defined.
+Qed.
 
 
 (*make all variables to coq-variables in the context *)
@@ -103,17 +104,17 @@ Ltac ProcPhi vars :=
   let s := fresh "s" in
   apply liftPhi_correct,Forall_forall;allVarsSubstL vars;
   repeat
-    lazymatch goal with
+    once lazymatch goal with
     | |- Forall _ (@nil _) => solve [simple apply Forall_nil]
     | |- _ => simple apply Forall_cons;[Lproc| ]
     end .
 
 (* solve goals of shape s >(?l) ?t for evars ?l, ?t!*)
 Ltac simplify_L' n:=
-  lazymatch goal with
+  once lazymatch goal with
     |- ?s >(_) _ =>
     allVarsPrep s;
-    lazymatch goal with
+    once lazymatch goal with
       |- ?s >(_) _ =>
       let vars:= allVars s in
   (*    let vars' := fresh "vars'" in
@@ -123,7 +124,7 @@ Ltac simplify_L' n:=
       pose (phi := Reflection.liftPhi vars);
       let pp := fresh "pp" in
       let cs := fresh "cs" in
-      assert (pp:Reflection.Proc phi) by (ProcPhi vars;shelve);
+      assert (pp:Reflection.Proc phi) by (ProcPhi vars);
       assert (cs :Reflection.rClosed phi s') by (simple apply Reflection.rClosed_decb_correct;[exact pp|vm_cast_no_check (@eq_refl bool true) ]);
       let R := fresh "R" in
       assert (R:= Reflection.rStandardizeUsePow n pp cs);
@@ -140,11 +141,12 @@ Ltac simplify_L' n:=
 
 
 Lemma pow_trans_eq: forall (s t u : term) (i j k: nat), s >(i) t -> t >(j) u -> i+j=k -> s >(k) u.
+Proof.
   intros. subst. eapply pow_trans;eauto. 
 Qed.
 
 Ltac Lreflexivity :=
-  lazymatch goal with
+  once lazymatch goal with
   | |- _ ⇓(<=_) _ => solve [apply (@evalIn_refl 0);Lproc | apply evalIn_refl;Lproc ]
   | |- _ >(<= _ ) _ => apply redLe_refl
   | |- _ ⇓(?i) _ => unify i 0;split;[reflexivity|Lproc]
@@ -156,9 +158,9 @@ Ltac Lreflexivity :=
 
 
 Ltac Lbeta' n :=
-  lazymatch goal with
+  once lazymatch goal with
     |- ?rel ?s _ =>    
-    lazymatch goal with
+    once lazymatch goal with
     | |- _ >(?i) _ => tryif is_evar i
       then eapply pow_trans;[simplify_L' n|]
       else (eapply pow_trans_eq;[simplify_L' n| |try reflexivity])
@@ -172,8 +174,8 @@ Ltac Lbeta' n :=
     | |- _ >* _ => etransitivity;[eapply pow_star_subrelation;simplify_L' n|]
     | |- ?G => fail "Not supported for LSimpl (or other failed):" G 
     end;
-    lazymatch goal with
-      |- ?rel s _ => fail "No Progress (progress in indexes are not currently noticed...)"
+    once lazymatch goal with
+      |- ?rel s _ => fail "No Progress in beta' in " rel s "(progress in indexes are not currently noticed...)"
     | |- _ => idtac
     (* don;t change evars if you did not make progress!*)
     end
@@ -206,7 +208,7 @@ Tactic Notation "standardize" ident(R) constr(n) constr(s) :=
 
 Ltac standardizeGoal' _n:=
   let R:= fresh "R" in
-  lazymatch goal with (* try etransitivity is for debugging, so we can disable ProcPhi iff needed*)
+  once lazymatch goal with (* try etransitivity is for debugging, so we can disable ProcPhi iff needed*)
     | |- ?s == _ => let R:= fresh "R" in standardize R _n s;try (etransitivity;[exact (star_equiv R)|];clear R)
     | |- ?s >* _ => let R:= fresh "R" in standardize R _n s;try (etransitivity;[exact R|];clear R)
   end.

@@ -1,4 +1,4 @@
-Require Import Omega Lia List. 
+Require Import Arith Lia List. 
 
 Ltac inv H := inversion H; subst; clear H.
 
@@ -26,7 +26,7 @@ Ltac exdestruct :=
     end.
 
 
-(** _Modus Ponens_ - applies to implications,
+(* _Modus Ponens_ - applies to implications,
     will generate a subgoal for the premise of H and then specialize H with the result *)
 Ltac mp H :=
 let x := fresh "H" in

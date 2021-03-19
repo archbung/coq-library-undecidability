@@ -5,13 +5,13 @@ From Undecidability.L Require Import UpToC.
 Import Nat.
 Require Export Undecidability.Shared.Libs.PSL.FiniteTypes.FinTypes.
 
-(** *** Encoding finite types *)
+(* *** Encoding finite types *)
 (* This is not an instance because we only want it for very specific types. *)
 Definition registered_finType `{X : finType} : registered X.
 Proof.
   eapply (registerAs index).
   intros x y H. now apply injective_index.
-Defined.
+Defined. (*because registerAs*)
 
 Definition finType_eqb {X:finType} (x y : X) :=
   Nat.eqb (index x) (index y).

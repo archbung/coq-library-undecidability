@@ -7,6 +7,7 @@ Set Implicit Arguments.
 Require Import Morphisms FinFun.
 From Undecidability.HOU Require Import std.tactics.
 
+Set Default Proof Using "Type".
 
 Section ClosureRelations.
   Variables (X: Type).
@@ -284,7 +285,7 @@ Section ClosureRelations.
 
 
   
-  (** Right-recursive version of star. *)
+  (* Right-recursive version of star. *)
   Inductive starL R x:  X -> Prop :=
   | starReflL : starL R x x
   | starStepL  y y':  starL R x y -> R y y' -> starL R x y'.

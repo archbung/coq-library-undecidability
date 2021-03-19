@@ -1,10 +1,11 @@
 Set Implicit Arguments.
-Require Import List Omega Lia.
+Require Import List Lia.
 Import ListNotations.
-From Undecidability.HOU Require Export calculus.prelim std.std.
+From Undecidability.HOU Require Import calculus.terms calculus.prelim std.std.
 
+Set Default Proof Using "Type".
 
-(** * Syntax *)
+(* * Syntax *)
 Definition isVar X (e: exp X) :=
   match e with var _ => True | _ => False end.
 
@@ -31,7 +32,7 @@ Ltac syn :=
   | [ |- isVar (var _)] => constructor
   end. 
 
-(** ** Atoms *)
+(* ** Atoms *)
 Section Atoms.
 
   Variable (X: Const).
@@ -80,7 +81,7 @@ Section DiscreteTypes.
 
 End DiscreteTypes.
 
-(** ** Applicative Head *)
+(* ** Applicative Head *)
 Section ApplicativeHead.
 
   Variable (X: Const).
@@ -128,7 +129,7 @@ End ApplicativeHead.
 Hint Resolve atom_var var_head atom_head : core.
 
 
-(** ** Type Functions *)
+(* ** Type Functions *)
 Section TypeFunctions.
 
   Fixpoint target (A: type) :=
@@ -148,7 +149,7 @@ Section TypeFunctions.
 End TypeFunctions.
 
 
-(** ** Free Variables *)
+(* ** Free Variables *)
 Section FreeVariables.
   Context {X: Const}.
                              

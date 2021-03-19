@@ -17,6 +17,8 @@ From Undecidability.MuRec
 
 Set Implicit Arguments.
 
+Set Default Proof Using "Type".
+
 Local Notation "'⟦' f '⟧'" := (@ra_rel _ f) (at level 0).
 
 Local Notation power := (mscal mult 1).
@@ -84,7 +86,7 @@ Tactic Notation "vec" "pos" "simpl" := simpl; repeat rewrite vec_pos_set; simpl;
 Local Fact eq_equiv X (e a b : X) : a = b -> (e = a <-> e = b).
 Proof. intros []; tauto. Qed.
 
-(** We start with primitive recursive iterators *)
+(* We start with primitive recursive iterators *)
 
 Section ra_iter_n.
 
@@ -96,7 +98,7 @@ Section ra_iter_n.
                      (Hag : prim_rec ag).
 
   Definition ra_iter_n : recalg (S n).
-  Proof.
+  Proof using af ag.
     apply (ra_rec af).
     apply ra_comp with (1 := ag).
     apply vec_set_pos; intros p.
@@ -104,10 +106,10 @@ Section ra_iter_n.
   Defined.
 
   Fact ra_iter_n_prim_rec : prim_rec ra_iter_n.
-  Proof. ra prim rec. Qed.
+  Proof using Haf Hag. ra prim rec. Qed.
 
   Fact ra_iter_n_val i v : ⟦ra_iter_n⟧ (i##v) (iter (g v) i (f v)).
-  Proof.
+  Proof using Hf Hg.
     simpl; unfold s_rec.
     induction i as [ | i IHi ]; simpl; auto.
     exists (iter (g v) i (f v)); split; auto.
@@ -117,7 +119,7 @@ Section ra_iter_n.
   Qed.
 
   Fact ra_iter_n_rel v e : ⟦ra_iter_n⟧ v e <-> e = iter (g (vec_tail v)) (vec_pos v pos0) (f (vec_tail v)).
-  Proof.
+  Proof using Hf Hg.
     vec split v with i; split.
     + intros H; apply ra_rel_fun with (1 := H), ra_iter_n_val.
     + intros; subst; apply ra_iter_n_val.
@@ -135,7 +137,7 @@ Section ra_iter.
            (Haf : prim_rec af).
 
   Definition ra_iter : recalg 2.
-  Proof.
+  Proof using af.
     apply ra_iter_n.
     + ra arg pos0.
     + ra root af.
@@ -143,12 +145,12 @@ Section ra_iter.
   Defined. 
 
   Fact ra_iter_prim_rec : prim_rec ra_iter.
-  Proof.
+  Proof using Haf.
     apply ra_iter_n_prim_rec; ra prim rec.
   Qed.
 
   Fact ra_iter_val k x : ⟦ra_iter⟧ (k##x##vec_nil) (iter f k x).
-  Proof.
+  Proof using Hf.
     unfold ra_iter.
     rewrite ra_iter_n_rel with (f := @vec_head _ _) (g := fun _ => f); simpl; auto.
     + intros v; vec split v with y; vec nil v; auto.
@@ -159,7 +161,7 @@ Section ra_iter.
   Qed.
 
   Fact ra_iter_rel v e : ⟦ra_iter⟧ v e <-> e = iter f (vec_pos v pos0) (vec_pos v pos1).
-  Proof.
+  Proof using Hf.
     vec split v with k; vec split v with x; vec nil v.
     split.
     + intros H; apply ra_rel_fun with (1 := H), ra_iter_val.
@@ -171,7 +173,7 @@ End ra_iter.
 Opaque ra_iter.
 Hint Resolve ra_iter_prim_rec ra_iter_val : core.
 
-(** Then basic arithmetic -1, +, -, *, exp *)
+(* Then basic arithmetic -1, +, -, *, exp *)
 
 Section ra_pred_plus.
 
@@ -339,7 +341,7 @@ End ra_exp.
 Hint Resolve ra_exp_prim_rec ra_exp_val : core.
 Opaque ra_exp.
 
-(** The Boolean/branch operators *)
+(* The Boolean/branch operators *)
 
 (* if b=0 then p else q *)
 
@@ -443,7 +445,7 @@ End ra_eq.
 Hint Resolve ra_eq_prim_rec ra_eq_val : core.
 Opaque ra_eq.
 
-(** A primitive recursive bounded minimization *)
+(* A primitive recursive bounded minimization *)
 
 Section ra_prim_min.
 
@@ -473,7 +475,7 @@ Section ra_prim_min.
   Qed.
 
   Definition ra_prim_min : recalg (S n).
-  Proof.
+  Proof using ag.
     apply ra_iter_n.
     + ra cst 0.
     + exact ag.
@@ -482,10 +484,10 @@ Section ra_prim_min.
   Opaque ag.
 
   Fact ra_prim_min_prim_rec : prim_rec ra_prim_min.
-  Proof. apply ra_iter_n_prim_rec; auto. Qed.
+  Proof using Haf. apply ra_iter_n_prim_rec; auto. Qed.
 
   Fact ra_prim_min_val i v : ⟦ra_prim_min⟧ (i##v) (prim_min (f v) i).
-  Proof.
+  Proof using Hf.
     unfold ra_prim_min.
     rewrite ra_iter_n_rel with (f := fun _ => 0) (g := fun w i => match f w i with 0 => i | _ => S i end).
     + unfold prim_min; simpl; auto.
@@ -494,7 +496,7 @@ Section ra_prim_min.
   Qed.
 
   Fact ra_prim_min_rel v e : ⟦ra_prim_min⟧ v e <-> e = prim_min (f (vec_tail v)) (vec_head v).
-  Proof.
+  Proof using Hf.
     vec split v with a.
     split.
     + intros H; apply ra_rel_fun with (1 := H), ra_prim_min_val.
@@ -506,7 +508,7 @@ End ra_prim_min.
 Hint Resolve ra_prim_min_prim_rec ra_prim_min_val : core.
 Opaque ra_prim_min.
 
-(** A primrec function than find i st f i <= b < f (S i) when f is a strictly
+(* A primrec function than find i st f i <= b < f (S i) when f is a strictly
     increasing 
 
     This provides an easy way to invert a primitive recursive function which is 
@@ -548,17 +550,17 @@ Section ra_prim_max.
   Opaque ag.
 
   Definition ra_prim_max : recalg (S (S n)).
-  Proof. apply ra_prim_min, ag. Defined.
+  Proof using ag. apply ra_prim_min, ag. Defined.
 
   Fact ra_prim_max_prim_rec : prim_rec ra_prim_max.
-  Proof. apply ra_prim_min_prim_rec; auto. Qed.
+  Proof using Haf. apply ra_prim_min_prim_rec; auto. Qed.
 
   Variables (a b : nat) (v : vec nat n) 
             (Hf2 : forall n, f v n <= f v (S n))
             (Hb : f v 0 <= b < f v (S a)).
 
   Fact ra_prim_max_spec : { e | ⟦ra_prim_max⟧ (a##b##v) e /\ f v e <= b /\ b < f v (S e) }.
-  Proof.
+  Proof using Hf Hb.
     exists (prim_min (fun i => S b - f v (S i)) a); split.
     + unfold ra_prim_max.
       rewrite ra_prim_min_rel with (f := fun w i => S (vec_head w) - f (vec_tail w) (S i)); auto.
@@ -576,7 +578,7 @@ End ra_prim_max.
 Hint Resolve ra_prim_max_prim_rec : core.
 Opaque ra_prim_max.
 
-(** Hence we can implement division as the inverse of multiplication *)
+(* Hence we can implement division as the inverse of multiplication *)
 
 Section ra_div.
 
@@ -648,7 +650,7 @@ End ra_div.
 Hint Resolve ra_div_prim_rec ra_div_val : core.
 Opaque ra_div.
 
-(** And then the remainder using division and multiplication *)
+(* And then the remainder using division and multiplication *)
 
 Section ra_rem.
 
@@ -694,7 +696,7 @@ End ra_rem.
 Hint Resolve ra_rem_prim_rec ra_rem_val : core.
 Opaque ra_rem.
 
-(** Now we specialize to binary ops *)
+(* Now we specialize to binary ops *)
 
 Section ra_binary_ops.
 
@@ -810,7 +812,7 @@ Opaque ra_notdiv_pow2.
 
 Section ra_lsum.
 
-  (** Given a prim rec algo recalg 1 and n
+  (* Given a prim rec algo recalg 1 and n
       returns f 0 v + f 1 v + ... + f (n-1) v *) 
 
   Variable (n : nat) (f : recalg (S n)) (Hf : prim_rec f).
@@ -861,14 +863,14 @@ Section ra_lsum.
   Opaque h.
 
   Definition ra_lsum : recalg (S n).
-  Proof.
+  Proof using h.
     apply ra_rec.
     + ra cst 0.
     + apply h.
   Defined.
 
   Fact ra_lsum_prim_rec : prim_rec ra_lsum.
-  Proof. ra prim rec. Qed.
+  Proof using Hf. ra prim rec. Qed.
 
   Fact ra_lsum_spec i v lr : 
           Forall2 ⟦f⟧ (map (fun x => x##v) (list_an 0 i)) lr
@@ -909,7 +911,7 @@ Section ra_lsum.
   Fact ra_lsum_S i v :
         (exists p k, p < i /\ ⟦f⟧ (p##v) (S k)) 
      -> exists k, ⟦ra_lsum⟧ (i##v) (S k).
-  Proof.
+  Proof using Hf.
     intros H.
     assert (forall p : pos i, ex (⟦ f ⟧ (pos2nat p##v))) as H1.
     { intro; apply Hf'. }
@@ -966,7 +968,7 @@ Qed.
 
 Section ra_choice3.
 
-  (** if   x=0 then p 
+  (* if   x=0 then p 
       elif x=1 then q
                else r *)
 

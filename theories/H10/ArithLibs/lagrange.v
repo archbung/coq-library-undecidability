@@ -17,6 +17,8 @@ From Undecidability.H10.ArithLibs
 
 Set Implicit Arguments.
 
+Set Default Proof Using "Type".
+
 Section utils.
 
   Fact prime_2_or_odd p : prime p -> p = 2 \/ exists n, 0 < n /\ p = 2*n+1.
@@ -188,7 +190,7 @@ End utils.
 
 Section half_modulus_lemma.
 
-  (** If x = +- m [ 2m ] then x² = m² [4m²] *)
+  (* If x = +- m [ 2m ] then x² = m² [4m²] *)
 
   Variable (m : nat) (H2m : 2*m <> 0) (Hm2 : 4*m*m <> 0).
 
@@ -331,7 +333,7 @@ Section lagrange_prelim_odd.
               exists a b, divides p (1+a*a+b*b) 
                        /\ 2*a <= p-1 
                        /\ 2*b <= p-1.
-  Proof.
+  Proof using Hf.
     destruct intersection as (u & G1 & G2).
     rewrite in_map_iff in G1.
     rewrite in_map_iff in G2.
@@ -351,7 +353,7 @@ Section lagrange_prelim_odd.
 
 End lagrange_prelim_odd.
 
-(** Preliminary lemma : any prime p has a (small) multiple n*p of the form 1+a²+b² with 0 < n < p *)
+(* Preliminary lemma : any prime p has a (small) multiple n*p of the form 1+a²+b² with 0 < n < p *)
 
 Lemma lagrange_prelim p : prime p -> exists n a b, n*p = 1+a*a+b*b /\ 0 < n < p.
 Proof.
@@ -388,7 +390,7 @@ Fact Euler_squares x y a1 b1 c1 d1 a2 b2 c2 d2 :
                              (a1*d2-d1*a2+c1*b2-b1*c2))%Z.
 Proof. intros -> ->; ring. Qed.
 
-(** The primes are sums of four square, the hard part *)
+(* The primes are sums of four square, the hard part *)
 
 Section lagrange_for_primes.
 
@@ -398,7 +400,7 @@ Section lagrange_for_primes.
 
   Let P n := exists a b c d, Z.of_nat (n*p) = four_squares a b c d.
 
-  (** DLW: This one was a pain in the ... *)
+  (* DLW: This one was a pain in the ... *)
 
   Section lagrange_prime_step.
 
@@ -411,7 +413,7 @@ Section lagrange_for_primes.
     Proof. lia. Qed.
 
     Local Fact lagrange_prime_step' : exists r, 1 <= r < m /\ P r.
-    Proof.
+    Proof using H1 H2 H3 Hp.
       (* we get small representatives for x1 ... x4 
          as y1 ... y4 *)
       generalize (Zp_small_repr Hm x1) (Zp_small_repr Hm x2)
@@ -573,7 +575,7 @@ Section lagrange_for_primes.
   (* Now that P 1 holfs ie p is sum of 4 squares *)
 
   Lemma lagrange_prime : exists a b c d, Z.of_nat p = (a*a+b*b+c*c+d*d)%Z.
-  Proof.
+  Proof using Hp.
     replace p with (1*p) by lia; change (P 1).
     destruct (lagrange_prelim Hp) as (n & a & b & H1 & H2 & H3).
     cut (P n).
@@ -611,7 +613,7 @@ Section lagrange.
       rewrite Nat2Z.inj_mul; apply Euler_squares; auto.
   Qed.
 
-  (** An relative integer is positive iff it is the sum of four squares *)
+  (* An relative integer is positive iff it is the sum of four squares *)
 
   Corollary lagrange_theorem_Z n : 0 <= n <-> exists a b c d, n = a*a+b*b+c*c+d*d.
   Proof.
@@ -629,5 +631,3 @@ Section lagrange.
 End lagrange.
 
 (* Check lagrange_theorem_Z. *)
-
-

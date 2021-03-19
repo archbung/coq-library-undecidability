@@ -1,8 +1,12 @@
-Require Import List Omega Lia Morphisms.
-From Undecidability.HOU Require Import std.std calculus.calculus.
-Import ListNotations. 
+Require Import List Lia.
+Import ListNotations.
 
-(** * Higher-Order Unification *)
+From Undecidability.HOU.calculus Require Import 
+  prelim terms syntax semantics equivalence typing order evaluator. 
+
+Set Default Proof Using "Type".
+
+(* * Higher-Order Unification *)
 Section UnificationDefinitions.
 
   Context {X: Const}.
@@ -27,7 +31,7 @@ Arguments uni _ : clear implicits.
 Arguments U _ : clear implicits.
 Hint Resolve H1ᵤ H2ᵤ : core.
 
-(** ** Normalisation *)
+(* ** Normalisation *)
 
 
 Definition NU {X: Const} (I: uni X) :=

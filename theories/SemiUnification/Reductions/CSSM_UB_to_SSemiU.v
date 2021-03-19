@@ -16,8 +16,6 @@ Require Import List PeanoNat Lia.
 Import ListNotations.
 Require Import Relations.Relation_Operators Relations.Operators_Properties.
 
-Require Import ssreflect ssrfun ssrbool.
-
 (* uniform boundedness of confluent simple stack machines *)
 From Undecidability.StackMachines Require Import SSM.
 From Undecidability.StackMachines.Util Require Import CSSM_facts.
@@ -25,6 +23,11 @@ From Undecidability.StackMachines.Util Require Import CSSM_facts.
 (* simple semi-unification *)
 Require Import Undecidability.SemiUnification.SemiU. 
 From Undecidability.SemiUnification.Util Require Import Facts Enumerable.
+
+Require Import ssreflect ssrfun ssrbool.
+
+Set Default Proof Using "Type".
+Set Default Goal Selector "!".
 
 Module Argument.
 
@@ -66,38 +69,37 @@ Definition nf (X: config) : config := nf_aux (embed X) X.
 
 (* X is equivalent to its normal form *)
 Lemma nf_equiv (X: config) : equiv X (nf X).
-Proof.
+Proof using confluent_M.
   rewrite /nf. move: (embed X) => i. elim: i X.
-    move=> X /=. by apply: equiv_refl.
+  { move=> X /=. by apply: equiv_refl. }
   move=> i IH X /=.
   case: (equiv_dec (unembed i) X).
-    move=> /equiv_sym H /=. apply: (equiv_trans confluent_M H). by apply: IH.
+  { move=> /equiv_sym H /=. apply: (equiv_trans confluent_M H). by apply: IH. }
   move=> /= _. by apply: IH.
 Qed.
 
 Lemma nf_equiv_eq_ind (X Y: config) (j: nat) : equiv X Y -> embed X < j -> nf_aux j Y = nf_aux (embed X) X.
-Proof.
+Proof using confluent_M.
   elim: j X Y; first by lia.
   move=> i IH X Y HXY HXi /=.
   case: (equiv_dec (unembed i) Y)=> /=.
-    move=> /equiv_sym HYi.
+  { move=> /equiv_sym HYi.
     have [/copy [/(f_equal unembed) + ->] | ?]: (embed X = i \/ embed X < i) by lia.
-      rewrite embedP. by move=> ->.
-    apply: IH; [ apply: equiv_trans; by eassumption | done].
+    - rewrite embedP. by move=> ->.
+    - apply: IH; [ apply: equiv_trans; by eassumption | done]. }
   move=> HiY. have [/(f_equal unembed) | ?]: (embed X = i \/ embed X < i) by lia.
-    rewrite embedP. move=> ?. by subst X.
-  by apply: IH.
+  - rewrite embedP. move=> ?. by subst X.
+  - by apply: IH.
 Qed.
 
 (* normal forms of equivalent configurations are equal *)
 Lemma nf_equiv_eq (X Y: config) : equiv X Y -> nf X = nf Y.
-Proof.
+Proof using confluent_M.
   have: (embed X = embed Y \/ embed X < embed Y \/ embed Y < embed X) by lia.
-  case.
-    move /(f_equal unembed). rewrite ? embedP. by move=> ->.
-  case.
-    move=> + H. move /nf_equiv_eq_ind. by move /(_ _ H).
-  move=> + /equiv_sym H. move /nf_equiv_eq_ind. by move /(_ _ H).
+  case; [|case].
+  - move /(f_equal unembed). rewrite ? embedP. by move=> ->.
+  - move=> + H. move /nf_equiv_eq_ind. by move /(_ _ H).
+  - move=> + /equiv_sym H. move /nf_equiv_eq_ind. by move /(_ _ H).
 Qed.
 
 (* n is 1 + bound - length X.2 *)
@@ -147,23 +149,23 @@ Qed.
 
 Lemma ζ_equivP {n: nat} {x x': state} {A B A' B': stack} : bounded' n -> equiv (A, B, x) (A', B', x') -> 
   ζ (S n - length B) (A, B, x) = ζ (S n - length B') (A', B', x').
-Proof.
+Proof using confluent_M.
   move /(extend_bounded' confluent_M) => Hn. move Hm: (S n - length B)=> m.
   elim: m A B A' B' Hm.
   - move=> A B A' B' HnB Hxx'.
     have [-> | HnB']: (S n - length B' = 0 \/ S n - length B' = (S (n - length B'))) by lia.
-      rewrite ? ζ_0P. do 2 f_equal. by apply: nf_equiv_eq.
+    { rewrite ? ζ_0P. do 2 f_equal. by apply: nf_equiv_eq. }
     rewrite HnB' ζ_0P ζ_SnP.
     case: (narrow_dec (A', B', x')) => /=; first last.
-      move=> _. do 2 f_equal. by apply: nf_equiv_eq.
+    { move=> _. do 2 f_equal. by apply: nf_equiv_eq. }
     move /equiv_sym in Hxx'.
     move /(narrow_equiv confluent_M Hxx') /Hn => /=. by lia.
   - move=> m IH A B A' B' Hm Hxx'.
     have [HnB' | ->]: (S n - length B' = 0 \/ S n - length B' = S (n - length B')) by lia.
-      rewrite HnB' ζ_0P ζ_SnP.
+    { rewrite HnB' ζ_0P ζ_SnP.
       case: (narrow_dec (A, B, x)) => /=; first last.
-        move=> _. do 2 f_equal. by apply: nf_equiv_eq.
-      move /(narrow_equiv confluent_M Hxx') /Hn => /=. by lia.
+      - move=> _. do 2 f_equal. by apply: nf_equiv_eq.
+      - move /(narrow_equiv confluent_M Hxx') /Hn => /=. by lia. }
     rewrite ?ζ_SnP.
     case: (narrow_dec (A, B, x)); case: (narrow_dec (A', B', x'))=> /=.
     + move=> _ _. apply: (arr_eqI (s := fun=> ζ _ _) (t := fun=> ζ _ _)).
@@ -182,16 +184,16 @@ Proof. by rewrite /ψ embedP. Qed.
 
 Lemma ψζP {n: nat} {x: state} {A B: stack} {a: bool} : bounded' n -> 
   ζ (S n - length B) (A ++ [a], B, x) = substitute (ψ a (S n)) (ζ (S n - length B) (A, B, x)).
-Proof.
+Proof using confluent_M.
   move=> Hn. move Hm: (S n - length B)=> m.
   elim: m x A B Hm.
   - move=> x A B Hm. rewrite ? ζ_0P /= ψP.
     move HAxB: (nf (A, B, x)) => [[A' B'] x'].
     have [-> | ?]: S n - length B' = 0 \/ S n - length B' > 0 by lia.
-      rewrite ζ_0P. f_equal. f_equal. 
-      apply: nf_equiv_eq. apply: equiv_appL. rewrite -HAxB. by apply: nf_equiv.
+    { rewrite ζ_0P. f_equal. f_equal. 
+      apply: nf_equiv_eq. apply: equiv_appL. rewrite -HAxB. by apply: nf_equiv. }
     have Hxx': equiv (A' ++ [a], B', x') (A ++ [a], B, x).
-      apply: equiv_appL. rewrite equiv_sym -HAxB. by apply: nf_equiv.
+    { apply: equiv_appL. rewrite equiv_sym -HAxB. by apply: nf_equiv. }
     by rewrite (ζ_equivP Hn Hxx') Hm ζ_0P.
   - move=> m IH x A B Hm.
     rewrite ? ζ_SnP. case: (narrow_dec (A, B, x)).
@@ -203,7 +205,7 @@ Proof.
       rewrite ψP. move HAxB: (nf (A, B, x)) => [[A' B'] x'].
       rewrite -Hm.
       have Hxx': equiv (A ++ [a], B, x) (A' ++ [a], B', x').
-        apply: equiv_appL. rewrite -HAxB. by apply: nf_equiv.
+      { apply: equiv_appL. rewrite -HAxB. by apply: nf_equiv. }
       by rewrite (ζ_equivP Hn Hxx').
 Qed.
 
@@ -305,9 +307,9 @@ Proof.
   apply: (bounded_of_bounded' confluent_M (n := depth_bound φ (map f (enum_states M)))).
   move=> /= Z x y A B Hx Hy.
   case: (In_dec _ y (enum_states M)); first by decide equality.
-    move=> /(in_map f) /depth_boundP => /(_ φ) Hfy.
+  { move=> /(in_map f) /depth_boundP => /(_ φ) Hfy.
     move: Hy => /(interpretP Hφ). move: Hx => /(interpretP Hφ) <- /= /descendP.
-    rewrite -/(f y). move: (length B) => ?. by lia.
+    rewrite -/(f y). move: (length B) => ?. by lia. }
   move: (Hy) Hx => /enum_states_reachable [<- /enum_states_reachable | ]; last by by move=> [+].
   case; last by move=> [+].
   case=> *. subst=> /=. by lia.

@@ -1,5 +1,7 @@
 Set Implicit Arguments.
 
+Set Default Proof Using "Type".
+
 Class Dec (P: Prop) := dec: {P} + {~P}.
 Arguments dec _ {_}.
 
@@ -185,7 +187,7 @@ Qed.
 
 
 
-Require Import List Omega Lia.
+Require Import List Arith Lia.
 
 Instance In_dec (X: Type) {D: Dis X}: Dec2 (@In X).
 Proof.

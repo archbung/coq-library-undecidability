@@ -20,6 +20,8 @@ From Undecidability.DiophantineConstraints
 
 Set Implicit Arguments.
 
+Set Default Proof Using "Type".
+
 Local Notation "'⟦' f '⟧'" := (@ra_rel _ f) (at level 0).
 
 Definition h10uc_eq a' b' (c : nat*nat*nat) :=
@@ -45,7 +47,7 @@ Definition nat_h10luc k :=
    let b := decomp_r (decomp_l k) 
    in  map (fun p => idx_h10uc a b (pos2nat p)) (pos_list n).
 
-(** nat_h10luc is surjective 
+(* nat_h10luc is surjective 
 
     needed to map an H10UC instance to a instance of the universal solver 
 
@@ -415,7 +417,7 @@ Section ra_univ_ad.
 
   Theorem ra_univ_ad_spec : ex (⟦ra_univ_ad⟧ (k##vec_nil)) 
                      <-> exists φ, forall c, In c lc -> h10uc_sem φ c.
-  Proof.
+  Proof using Hf_tot.
     split.
     + intros (v & Hv).
       simpl in Hv; red in Hv.

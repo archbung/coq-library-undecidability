@@ -1,12 +1,10 @@
-From Undecidability.L.Tactics Require Import LTactics GenEncode.
-From Undecidability.L.Datatypes Require Import LNat Lists LProd LFinType LVector.
+From Undecidability.L.Datatypes Require Import LNat Lists LVector.
 From Undecidability.L Require Import TM.TMEncoding.
 
-
-From Undecidability Require Import TM.Util.TM_facts.
-Require Import Undecidability.Shared.Libs.PSL.FiniteTypes.FinTypes.
+From Undecidability.TM Require Import Util.TM_facts.
 
 
+Set Default Proof Using "Type".
 Section fix_sig.
   Variable sig : Type.
   Context `{reg_sig : registered sig}.
@@ -54,7 +52,7 @@ Section fix_sig.
     Qed.
 
 
-    Import Datatypes.
+    
     Global Instance term_tapeToList:  computableTime' (@tapeToList sig) (fun t _ => (sizeOfTape t*29 + 53,tt)).  
     Proof.
     extract. recRel_prettify2. all:repeat (simpl_list;cbn -[plus mult]). 
@@ -67,22 +65,8 @@ Section fix_sig.
       extract. unfold sizeOfTape. solverec. unfold c__length. solverec. 
     Qed.
 
-    Lemma Vector_fold_right_to_list (A B : Type) (f : A -> B -> B) (n : nat) (v : Vector.t A n) (a : B):
-      Vector.fold_right f v a = fold_right f a (Vector.to_list v).
-    Proof. unfold Vector.to_list.
-           induction n. all:destruct_vector. all:cbn;congruence.
-    Qed.
-    Lemma Vector_fold_left_to_list (A B : Type) (f : A -> B -> A) (n : nat) (v : VectorDef.t B n) (a : A):
-      VectorDef.fold_left f a v = fold_left f (Vector.to_list v) a.
-    Proof. unfold Vector.to_list.
-           induction n in v,a|-*. all:destruct_vector. all:cbn;congruence.
-    Qed.
-    Lemma Vector_map_to_list (A B : Type) (f : A -> B) (n : nat) (v : VectorDef.t A n):
-       Vector.to_list (VectorDef.map f v) = map f (Vector.to_list v).
-    Proof. unfold Vector.to_list. induction n in v|-*. all:destruct_vector. all:cbn;congruence.
-    Qed.
-
     Import Nat.
+
     Global Instance term_sizeOfmTapes n:
       computableTime' (@sizeOfmTapes sig n) (fun t _ => ((sizeOfmTapes t*105+101) * n + 56,tt)).
     Proof.
@@ -101,9 +85,8 @@ Section fix_sig.
       { unfold f. extract. solverec. unfold c__max1, max_time, c__max2. solverec. }
 
       eapply computableTimeExt. exact H'.
-      Import Vector.
-      extract. solverec. unfold sizeOfmTapes. rewrite Vector_fold_left_to_list,fold_symmetric. 2,3:intros;nia.
-      rewrite Vector_map_to_list,to_list_length.
+      extract. solverec. unfold sizeOfmTapes. rewrite vector_fold_left_to_list,fold_symmetric. 2,3:intros;nia.
+      rewrite vector_map_to_list,to_list_length.
       set (List.fold_right _ _ _). nia. 
     Qed.
 
@@ -145,6 +128,3 @@ Proof.
   extract.
   solverec.
 Qed.
-
-
-

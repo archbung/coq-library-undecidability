@@ -1,15 +1,18 @@
 Set Implicit Arguments.
 Require Import Morphisms Setoid.
-From Undecidability.HOU Require Import std.std calculus.prelim 
-    calculus.semantics calculus.confluence calculus.normalisation.
+From Undecidability.HOU Require Import std.std. 
+From Undecidability.HOU.calculus Require Import 
+  prelim terms syntax semantics confluence typing order normalisation. 
 
 
-(** * Evaluator *)
+Set Default Proof Using "Type".
+
+(* * Evaluator *)
 Section Evaluator.
 
   Context {X: Const}.
 
-  (** ** Step Indexed Interpreter *)
+  (* ** Step Indexed Interpreter *)
   Definition xi := evaluator.E (@rho X) _.
 
   Lemma xi_correct s t:
@@ -34,9 +37,9 @@ Section Evaluator.
   Qed.
 
 
-  (** ** Evaluator *)
+  (* ** Evaluator *)
 
-  (**  we use eta, as xi is already used for the step indexed version *)
+  (*  we use eta, as xi is already used for the step indexed version *)
   Definition eta (s: exp X) {Gamma A} (H: Gamma ⊢ s : A) :=
     proj1_sig (compute_evaluation_step (termination_steps H)).
 

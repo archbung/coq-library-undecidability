@@ -1,8 +1,12 @@
 Set Implicit Arguments.
-Require Import List Omega Lia.
-From Undecidability.HOU.calculus Require Export syntax semantics equivalence typing.
+Require Import List Arith Lia.
+From Undecidability.HOU Require Import std.std.
+From Undecidability.HOU.calculus Require Import 
+  prelim terms syntax semantics typing. 
 
- (** * Order Typing *)
+Set Default Proof Using "Type".
+
+ (* * Order Typing *)
 Section OrderTyping.
   
   Context {X: Const}.
@@ -14,7 +18,7 @@ Section OrderTyping.
            (sigma tau: fin -> exp X) (delta xi: fin -> fin).
   
 
-    (** ** Order of Types *)
+    (* ** Order of Types *)
     Section Order.
 
     Fixpoint ord A :=
@@ -67,7 +71,7 @@ Section OrderTyping.
 
     Lemma ord'_in A Gamma: A ∈ Gamma -> ord A <= ord' Gamma.
     Proof.
-      induction Gamma; cbn in *; intuition; subst; eauto.
+      induction Gamma; cbn in *; intuition; subst; eauto; lia.
     Qed.
     
     Lemma ord'_elements n Gamma: (forall A, A ∈ Gamma -> ord A <= n) <-> ord' Gamma <= n.
@@ -107,7 +111,7 @@ Section OrderTyping.
   Hint Resolve ord'_cons : core. 
 
 
-  (** ** Order Typing *)
+  (* ** Order Typing *)
   Reserved Notation "Gamma '⊢(' n ')' s ':' A" (at level 80, s at level 99).
 
   Inductive ordertyping n Gamma: exp X -> type -> Prop :=
@@ -211,7 +215,7 @@ Section OrderTyping.
       2, 4: eauto. all: eauto.
   Qed.
 
-  (** ** Preservation Order Typing *)
+  (* ** Preservation Order Typing *)
   Section PreservationOrdertyping.
     
     Lemma ordertyping_weak_preservation_under_renaming Gamma n s A delta Delta:

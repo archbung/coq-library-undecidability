@@ -1,8 +1,7 @@
-From Undecidability Require Import ProgrammingTools.
-From Undecidability Require Import EncodeBinNumbers.
-From Undecidability Require Export ArithPrelim. (* [nia] etc. *)
-From Undecidability Require Import ArithPrelim. (* [nia] etc. *)
-Require Export BinPos.
+From Undecidability.TM Require Import ProgrammingTools.
+From Undecidability.TM Require Import EncodeBinNumbers.
+From Undecidability.TM Require Export ArithPrelim. (* [nia] etc. *)
+From Coq Require Export BinPos.
 
 (* Compute 42. (* default number notation is still for [nat] *) *)
 
@@ -21,7 +20,7 @@ Local Open Scope positive_scope.
 (* Compute Pos.size_nat (42 ^ 42). *)
 
 
-(** ** General definitions and lemmas on binary numbers *)
+(* ** General definitions and lemmas on binary numbers *)
 
 (* Append a lower-order bit *)
 Definition append_bit (p : positive) (b : bool) := if b then p~1 else p~0.
@@ -44,7 +43,7 @@ Lemma Encode_positive_app_xIO (p : positive) (b : bool) :
 Proof. destruct b. apply Encode_positive_app_xO. apply Encode_positive_app_xI. Qed.
 
 
-(** Append (lower-order) bits to the binary number. The last bit in the list will be the LSB. *)
+(* Append (lower-order) bits to the binary number. The last bit in the list will be the LSB. *)
 Fixpoint append_bits (x : positive) (bits : list bool) : positive :=
   match bits with
   | nil => x
@@ -53,7 +52,7 @@ Fixpoint append_bits (x : positive) (bits : list bool) : positive :=
 
 (* Compute append_bits 42 [false; true]. (* 42 * 2 * 2 + 1 = 169 *) *)
 
-Goal encode_pos (append_bits 1234567890 [false;true;true]) = encode_pos 1234567890 ++ map bitToSigPos [false;true;true]. reflexivity. Qed.
+Goal encode_pos (append_bits 1234567890 [false;true;true]) = encode_pos 1234567890 ++ map bitToSigPos [false;true;true]. Proof. reflexivity. Qed.
 
 Lemma append_bits_bit (b : bool) (p : positive) (bits : list bool) :
   append_bits p (b :: bits) = append_bits (p~~b) bits.
@@ -144,6 +143,7 @@ Proof.
 Qed.
 
 Lemma pos_to_bits_append_bits' : forall bits1 bits2, pos_to_bits (append_bits (bits_to_pos bits1) bits2) = bits1 ++ bits2.
+Proof.
   intros.
   rewrite pos_to_bits_append_bits. now rewrite bits_to_pos_to_bits.
 Qed.
@@ -198,7 +198,7 @@ Proof.
 Qed.
 
 
-(** Shifting bits left and right *)
+(* Shifting bits left and right *)
 
 Fixpoint shift_left (p : positive) (n : nat) :=
   match n with
@@ -235,7 +235,7 @@ Proof.
 Qed.
 
 
-(** Number of non-HSB bits *)
+(* Number of non-HSB bits *)
 Fixpoint pos_size (p : positive) : nat :=
   match p with
   | 1 => 0

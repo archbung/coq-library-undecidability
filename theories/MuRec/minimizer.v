@@ -11,27 +11,29 @@ Require Import Arith Lia.
 
 Set Implicit Arguments.
 
+Set Default Proof Using "Type".
+
 Section nat_rev_ind.
 
-  (** A reverse recursion principle *)
+  (* A reverse recursion principle *)
 
   Variables (P : nat -> Prop)
             (HP : forall n, P (S n) -> P n).
 
   Theorem nat_rev_ind x y : x <= y -> P y -> P x.
-  Proof. induction 1; auto. Qed.
+  Proof using HP. induction 1; auto. Qed.
 
 End nat_rev_ind.
 
 Section nat_rev_ind'.
 
-  (** A reverse recursion principle *)
+  (* A reverse recursion principle *)
 
   Variables (P : nat -> Prop) (k : nat)
             (HP : forall n, n < k -> P (S n) -> P n).
 
   Theorem nat_rev_ind' x y : x <= y <= k -> P y -> P x.
-  Proof.
+  Proof using HP.
     intros H1 H2. 
     set (Q n := n <= k /\ P n).
     assert (forall x y, x <= y -> Q y -> Q x) as H.
@@ -92,7 +94,7 @@ Section minimizer_pred.
   Qed.
 
   Definition minimizer_pred : sig minimizer.
-  Proof.
+  Proof using Hmin loop.
     destruct (loop bar_0) as (k & H1 & H2).
     exists k; split; auto.
     intros; apply H2; lia.
@@ -103,7 +105,7 @@ End minimizer_pred.
 (* Check minimizer_pred. *)
 (* Print Assumptions minimizer_pred. *)
 
-(* (** Let P be a computable predicate: *)
+(* (* Let P be a computable predicate: *)
 (*       - whenever P n has a value (P n or not P n) then that value can be computed *)
 (*     Then minimizer P is computable as well: *)
 (*       - whenever minimizer P holds for some n, then such an n can be computed *)
@@ -192,5 +194,3 @@ End minimizer_pred.
 (* Print Assumptions minimizer_coq. *)
 
 (* Extraction "minimizer.ml" minimizer_coq. *)
-
-     

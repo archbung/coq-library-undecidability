@@ -1,21 +1,21 @@
 From Undecidability.L Require Export LTerm Por Decidability Lbeta_nonrefl.
 Import L_Notations.
 
-(** * Definition of L-acceptability *)
+(* * Definition of L-acceptability *)
 
 Definition pi (s t:term) := converges (s (ext t)).
 
 Definition lacc (P : term -> Prop) := 
   exists u, proc u /\ forall t, P t <-> pi u t.
 
-(** * Properties of acceptance *)
+(* * Properties of acceptance *)
 
 Goal forall s1 s2 t, s1 == s2 -> (pi s1 t <-> pi s2 t).
 Proof. 
   intros s1 s2 t H; intuition; unfold pi; [now rewrite <- H | now rewrite H].
 Qed.
 
-(** * L-acceptable predicates are closed under conjunction and disjunction *)
+(* * L-acceptable predicates are closed under conjunction and disjunction *)
 
 Definition acc_conj (p q : term) := lam ((lam (q #1)) (p #0) ).
 Hint Unfold acc_conj : cbv.
@@ -51,7 +51,7 @@ Proof.
   (* todo: nicer way?*)
   assert (R':(lam(
       (Por ((ext app) (ext u) ((ext (term_enc)) 0)))
-      ((ext app) (ext v) ((ext (term_enc)) 0))) (ext t)) >* t'). subst t'. Lsimpl.
+      ((ext app) (ext v) ((ext (term_enc)) 0))) (ext t)) >* t'). subst t'. now Lsimpl.
   rewrite R'. subst t'.
   split. intros [A|B].
   -destruct (Por_correct_1a (v (enc t)) A) as [s [R ls]]. exists s. split;try Lproc. eassumption.
@@ -64,7 +64,7 @@ Proof.
    apply Por_correct' in H0. destruct x;auto.                       
 Qed.
 
-(** * L-ecidable predicates are L-acceptable (and their complement too) *)
+(* * L-ecidable predicates are L-acceptable (and their complement too) *)
 
 Lemma dec_lacc M : ldec M -> lacc M.
 Proof.
@@ -74,7 +74,8 @@ Proof.
       split; intros H; destruct dec_u_M; try tauto. 
       * destruct H0 as [u_true ?]. eexists;split;[|eexists;reflexivity]. redSteps. rewrite u_true. destruct x. now Lsimpl. tauto.
       * destruct H0. destruct x. tauto. 
-        assert ((lam ((((u #0) I) (lam Omega)) I)) (enc t) == Omega). clear H. LsimplRed. rewrite H0. Lrewrite. now Lsimpl. destruct H as [H [? []]]. subst H. rewrite H2 in H3. 
+        assert ((lam ((((u #0) I) (lam Omega)) I)) (enc t) == Omega). clear H. LsimplRed. rewrite H0. Lrewrite.
+        now Lsimpl_old. destruct H as [H [? []]]. subst H. rewrite H2 in H3. 
         destruct (Omega_diverges H3).
 Qed.
 

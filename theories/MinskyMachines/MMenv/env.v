@@ -12,8 +12,11 @@ From Undecidability.Shared.Libs.DLW.Utils
 
 Set Implicit Arguments.
 
+Set Default Proof Using "Type".
+
 Reserved Notation " e '⇢' x " (at level 58).
-Reserved Notation " e [ v / x ] " (at level 57, v at level 0, x at level 0, left associativity).
+Reserved Notation " e [ v / x ] " (at level 57, v at level 0, x at level 0, 
+                                   left associativity, format "e [ v / x ]").
 Reserved Notation " e ⦃  x '⇠' v ⦄ " (at level 57, v at level 0, x at level 0, left associativity).
 
 Section env.
@@ -55,7 +58,7 @@ Ltac find_val x t :=
   end.
 
 Tactic Notation "rew" "env" :=
-  repeat lazymatch goal with 
+  repeat once lazymatch goal with 
     |              |- context[ _⦃ ?x⇠_⦄⇢?x ] => rewrite get_set_env_eq  with (1 := eq_refl x)
     | _ : ?x = ?y  |- context[ _⦃ ?x⇠_⦄⇢?y ] => rewrite get_set_env_eq  with (p := x) (q := y)
     | _ : ?y = ?x  |- context[ _⦃ ?x⇠_⦄⇢?y ] => rewrite get_set_env_eq  with (p := x) (q := y)
@@ -67,7 +70,7 @@ Tactic Notation "rew" "env" :=
 
 (*
 Tactic Notation "rew" "envi" :=
-  repeat lazymatch goal with 
+  repeat once lazymatch goal with 
     | |- context f[ _[_/?l]#>?l ] => rewrite get_set_env_eq with (x := l) 
     | _ : ?l <> ?m |- context f[ _[_/?l]#>?m ] => rewrite get_set_env_neq with (x := l) (y := m)
     | _ : ?m <> ?l |- context f[ _[_/?l]#>?m ] => rewrite get_set_env_neq with (x := l) (y := m)

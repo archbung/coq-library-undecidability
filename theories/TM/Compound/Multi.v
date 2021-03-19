@@ -6,12 +6,12 @@ From Undecidability Require Import TM.Lifting.Lifting.
 
 From Undecidability Require Import TM.Compound.TMTac.
 
-(** * Simple compound multi-tape Machines *)
+(* * Simple compound multi-tape Machines *)
 
 
-(** ** Nop *)
+(* ** Nop *)
 
-(** The n-tape Machine that does nothing *)
+(* The n-tape Machine that does nothing *)
 Section Nop.
   Variable sig : finType.
   Variable n : nat.
@@ -38,7 +38,7 @@ Arguments Nop {sig n}.
 Arguments Nop : simpl never.
 
 
-(** ** Diverge *)
+(* ** Diverge *)
 
 Section Diverge.
   Variable sig : finType.
@@ -64,7 +64,7 @@ Arguments Diverge : simpl never.
 
 
 
-(** ** Move two tapes *)
+(* ** Move two tapes *)
 
 Section MovePar.
   Variable sig : finType.
@@ -77,6 +77,8 @@ Section MovePar.
 
   Definition MovePar : pTM sig unit 2 :=
     LiftTapes (Move D1) [|Fin0|];; LiftTapes (Move D2) [|Fin1|].
+
+    
 
   Lemma MovePar_Sem : MovePar ⊨c(3) MovePar_R.
   Proof.
@@ -93,9 +95,9 @@ Arguments MovePar {sig} (D1 D2).
 Arguments MovePar : simpl never.
 
 
-(** ** Copy Symbol *)
+(* ** Copy Symbol *)
 
-(** Copy the current symbol from tape 0 to tape 1 *)
+(* Copy the current symbol from tape 0 to tape 1 *)
 Section Copy.
   Variable sig : finType.
 
@@ -141,9 +143,9 @@ Arguments CopyChar { sig }.
 Arguments CopyChar : simpl never.
 
 
-(** ** Read Char *)
+(* ** Read Char *)
 
-(** Read a char at an arbitrary tape *)
+(* Read a char at an arbitrary tape *)
 Section ReadChar.
 
   Variable sig : finType.
@@ -156,6 +158,9 @@ Section ReadChar.
     fun tin '(yout, tout) =>
       yout = current tin[@k] /\
       tout = tin.
+
+
+
 
   Lemma ReadChar_at_Sem :
     ReadChar_at ⊨c(1) ReadChar_at_Rel.
@@ -179,10 +184,10 @@ Arguments ReadChar_at {sig n} k.
 Arguments ReadChar_at_Rel { sig n } ( k ) x y /.
 
 
-(** ** Tactic Support *)
+(* ** Tactic Support *)
 
 Ltac smpl_TM_Multi :=
-  lazymatch goal with
+  once lazymatch goal with
   | [ |- Nop ⊨ _ ] => eapply RealiseIn_Realise; apply Nop_Sem
   | [ |- Nop ⊨c(_) _ ] => eapply Nop_Sem
   | [ |- projT1 (Nop) ↓ _ ] => eapply RealiseIn_TerminatesIn; apply Nop_Sem

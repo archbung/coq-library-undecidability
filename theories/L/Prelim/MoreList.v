@@ -1,5 +1,5 @@
 Require Import Undecidability.Shared.Libs.PSL.Base Lia.
-(** Nats smaller than n *)
+(* Nats smaller than n *)
 
 Fixpoint natsLess n : list nat :=
   match n with
@@ -24,7 +24,7 @@ Proof.
 Qed.
 
 
-(** Sum *)
+(* Sum *)
 
 Fixpoint sumn (A:list nat) :=
   match A with
@@ -41,6 +41,7 @@ Hint Rewrite sumn_app : list.
 
 Lemma length_concat X (A : list (list X)) :
   length (concat A) = sumn (map (@length _) A).
+Proof.
   induction A;cbn. reflexivity. autorewrite with list in *. lia.
 Qed.
 

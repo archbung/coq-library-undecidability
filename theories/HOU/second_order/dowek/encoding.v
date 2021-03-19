@@ -1,11 +1,15 @@
 Set Implicit Arguments.
-Require Import List Omega Lia.
+Require Import List Lia.
 Import ListNotations.
-From Undecidability.HOU Require Import std.std unification.unification calculus.calculus second_order.diophantine_equations.
+From Undecidability.HOU Require Import std.std calculus.calculus second_order.diophantine_equations.
+From Undecidability.HOU.unification Require Import 
+  systemunification nth_order_unification.
 
-(** * Higher-Order Motivation *)
+Set Default Proof Using "Type".
 
-(** ** Church Numerals *)
+(* * Higher-Order Motivation *)
+
+(* ** Church Numerals *)
 Section ChurchEncoding.
   Context {X: Const}.
   Implicit Type (n c: nat) (x y z: fin) (e: deq) (E: list deq).
@@ -195,7 +199,7 @@ Hint Rewrite @add_ren @add_subst @mul_ren @mul_subst
        @enc_ren @enc_subst : asimpl.
 
 
-(** ** Characteristic Equation *)
+(* ** Characteristic Equation *)
 Lemma enc_characteristic X (s: exp X):
   normal s ->
   lambda lambda (var 0) ((ren (shift >> shift) s) (var 1) (var 0)) ≡
@@ -249,7 +253,7 @@ Qed.
 
 
 
-(** ** Diophantine Equations Encoding *)
+(* ** Diophantine Equations Encoding *)
 Section Encoding.
 
   Context {X: Const}.
@@ -356,7 +360,7 @@ Hint Rewrite @enc_ren @enc_subst : asimpl.
 Notation Eqs E := (flat_map eqs E). 
 
 
-(** ** Reduction Function *)
+(* ** Reduction Function *)
 Program Instance H10_to_DWK X (E: list deq): ordsysuni X 3 :=
   {
     Gamma₀' := Gamma__dwk E;

@@ -1,9 +1,9 @@
-(** * Primitive Two-tape machines *)
+(* * Primitive Two-tape machines *)
 
-From Undecidability Require Import TM.Util.TM_facts.
+From Undecidability.TM Require Import Util.TM_facts.
 
 
-(** ** Read two symbols *)
+(* ** Read two symbols *)
 
 
 Section CaseChar2.
@@ -66,10 +66,10 @@ Arguments ReadChar2 {sig}.
 Arguments ReadChar2_Rel sig x y /.
 
 
-(** ** Tactic Support *)
+(* ** Tactic Support *)
 
 Ltac smpl_TM_Duo :=
-  lazymatch goal with
+  once lazymatch goal with
   | [ |- CaseChar2 _ ⊨ _] => eapply RealiseIn_Realise; eapply CaseChar2_Sem
   | [ |- CaseChar2 _ ⊨c(_) _] => eapply CaseChar2_Sem
   | [ |- projT1 (CaseChar2 _) ↓ _] => eapply RealiseIn_TerminatesIn; eapply CaseChar2_Sem

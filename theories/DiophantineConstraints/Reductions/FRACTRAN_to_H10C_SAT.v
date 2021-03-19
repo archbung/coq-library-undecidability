@@ -7,7 +7,7 @@
 (*         CeCILL v2 FREE SOFTWARE LICENSE AGREEMENT          *)
 (**************************************************************)
 
-Require Import List Arith Omega Lia Max.
+Require Import List Arith Lia Max.
 
 Require Import Undecidability.Synthetic.Undecidability.
 
@@ -19,7 +19,7 @@ Set Implicit Arguments.
 
 Section dc_list_h10c.
 
-  (** Reduction from (l,ν) an instance of a DIO_ELEM_PROBLEM 
+  (* Reduction from (l,ν) an instance of a DIO_ELEM_PROBLEM 
       where 
          - l is a list of elementary Diophantine constraints
          - ν is a valuation for the paratemeters
@@ -214,7 +214,3 @@ End DIO_ELEM_H10C_SAT.
 Check DIO_ELEM_H10C_SAT.
 Check FRACTRAN_HALTING_DIO_LOGIC_SAT.
 Check DIO_LOGIC_ELEM_SAT.
- 
-
-
-

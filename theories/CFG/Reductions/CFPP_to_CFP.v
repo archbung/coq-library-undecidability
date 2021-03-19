@@ -14,7 +14,9 @@ Require Import Undecidability.Synthetic.Definitions.
 
 Require Import Setoid Morphisms Arith Lia.
 
-(** * PCP to CFPP *)
+Set Default Proof Using "Type".
+
+(* * PCP to CFPP *)
 Hint Rewrite concat_app map_app map_map : list.
 Hint Rewrite <- map_rev : list.
 

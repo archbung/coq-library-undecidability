@@ -58,6 +58,7 @@ Arguments f__UpToC {_} _ {_}.
 
 Lemma UpToC_le X F (f : @UpToC X F) :
   (forall x, f x <= (c__leUpToC (H:=f))*F x).
+Proof.
   destruct f as [? []];cbn. easy.
 Qed.
 
@@ -200,7 +201,7 @@ Proof.
   timeout 3 (smpl_upToC_solve). (* If this times out, most likely the upToC_S hint is applied wrongly. *)
 Qed.
 
-(** Tests *)
+(* Tests *)
 Goal ( { f : UpToC (fun x => x + 1) | forall x, 3 * x + 10 <= f x}).
 Proof.
   eexists_UpToC f.

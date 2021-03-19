@@ -18,9 +18,12 @@ Require Import Undecidability.MinskyMachines.MM2.
 Require Undecidability.CounterMachines.CM2.
 
 From Undecidability.CounterMachines.Util Require Import 
-  Nat_facts List_facts MM2_facts.
+  Nat_facts List_facts MM2_facts CM2_facts.
 
 Require Import ssreflect ssrbool ssrfun.
+
+Set Default Proof Using "Type".
+Set Default Goal Selector "!".
 
 Module Argument.
 Section MM2_CM2.
@@ -33,7 +36,7 @@ Section MM2_CM2.
   Definition fs (i: nat) : CM2.State :=
     if i is S i then i + a0 + b0 else (length P) + a0 + b0.
 
-  (** encode instruction mmi at position i using index map fs for current cm2 state p *)
+  (* encode instruction mmi at position i using index map fs for current cm2 state p *)
   Definition encode_instruction (mmi: mm2_instr) : CM2.Instruction :=
     match mmi with
     | mm2_inc_a => CM2.inc false
@@ -163,14 +166,6 @@ Section MM2_CM2.
     - move: (program_index_spec i) => [{}i | {}i op] ->.
       + move=> + _ y [] op [? ?] => /(_ op). by apply.
       + move: op a b => [||j|j] [|a] [|b] _ /= []; by lia.
-  Qed.
- 
-  (* halting is monotone *)
-  Lemma halting_monotone {x} (n m: nat) : n <= m ->
-    CM2.halting M (Nat.iter n (CM2.step M) x) -> CM2.halting M (Nat.iter m (CM2.step M) x).
-  Proof.
-    move=> ? ?. have -> : m = n + (m-n) by lia.
-    rewrite iter_plus. elim: (m-n); [done | by move=> * /=; congruence].
   Qed.
 
   Lemma transport : MM2_HALTING (P, a0, b0) -> CM2.CM2_HALT M.

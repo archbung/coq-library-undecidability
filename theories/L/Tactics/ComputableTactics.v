@@ -4,7 +4,7 @@ From Undecidability.L.Tactics Require Import Lproc Computable ComputableTime Lsi
 Require Export Ring Arith Lia.
 Import L_Notations.
 
-(** ** Tactics proving correctness *)
+(* ** Tactics proving correctness *)
 Module Intern.
   
 Ltac visibleHead t :=
@@ -35,12 +35,12 @@ Ltac recRem P:=
   end.
 
 Ltac recStepInit P:=
-   lazymatch eval lazy [P] in P with
+   once lazymatch eval lazy [P] in P with
    | rho ?rP =>
-     lazymatch goal with
+     once lazymatch goal with
      | |- evalLe _ _ _ => 
        let rec loop := 
-           lazymatch goal with
+           once lazymatch goal with
            | |- ARS.pow step _ (app P _) _ =>unfold P;apply rho_correctPow;now Lproc
            | |- ARS.pow step _ (app _ _) _ => eapply pow_step_congL;[loop|reflexivity]
            end
@@ -48,7 +48,7 @@ Ltac recStepInit P:=
        eapply evalLe_trans;[apply pow_redLe_subrelation;loop|fold P; unfold rP]
      | |- evalIn _ _ _ =>
        let rec loop := 
-           lazymatch goal with
+           once lazymatch goal with
            | |- ARS.pow step _ (app P _) _ =>unfold P;apply rho_correctPow;now Lproc
            | |- ARS.pow step _ (app _ _) _ => eapply pow_step_congL;[loop|reflexivity]
            end
@@ -56,7 +56,7 @@ Ltac recStepInit P:=
        eapply evalIn_trans;[loop|fold P; unfold rP]
      | |- eval _ _ =>
        let rec loop := 
-           lazymatch goal with
+           once lazymatch goal with
            | |- ARS.star step (app P _) _ =>unfold P;apply rho_correct;now Lproc
            | |- ARS.star step (app _ _) _ => eapply star_step_app_proper;[loop|reflexivity]
            end
@@ -66,27 +66,24 @@ Ltac recStepInit P:=
    end.
 
 
-Ltac recStepUnnamed :=
-  match goal with
-    [ P := rho _ |- ?G ] => recStepInit P
-  end.
+Ltac recStepNew P := recStepInit P.
 
 
 Ltac destructRefine :=
-  lazymatch goal with
+  once lazymatch goal with
     |- ?R ?s _ =>
     match s with
     | context C [match ?x with _ => _ end]=>
       let t := type of x in
       refine (_:R _ ((fun y:t => ltac:(destruct y)) x));
       (* refine index if applicable*)
-      lazymatch goal with
+      once lazymatch goal with
         |- (?R' ?i ?s1 ?s2) => tryif is_evar i then
           refine (_:R' ((fun (y:t) (*(_ : x=y)*) => ltac:(destruct y)) x ) s1 s2)
         else idtac
       | _ => idtac
       end;
-      lazymatch goal with
+      once lazymatch goal with
        | |- ?R2 ?i ?s ?t =>
          let i':= eval cbn zeta in i in
              refine (_:R2 i' s t) + match goal with |- ?G => let G' := constr:(R2 i' s t) in idtac "could not refine" G "with" G' end
@@ -96,9 +93,6 @@ Ltac destructRefine :=
     end
   end.
 
-Ltac extractCorrectCrush :=
-  repeat(repeat destructRefine;Lsimpl).
-
 Ltac shelveIfUnsolved msg:= first[let n:= numgoals in guard n=0|
                                   match goal with
                                     |- ?G => idtac "Could not solve some subgoal("msg"):";idtac G;shelve
@@ -106,7 +100,7 @@ Ltac shelveIfUnsolved msg:= first[let n:= numgoals in guard n=0|
 
 Ltac ugly_fix_fix IH n :=
   (* we must destruct to allow the fix to reduce...*)
-  lazymatch eval cbn in n with
+  once lazymatch eval cbn in n with
     0 => fix IH 1
   | 1 => fix IH 4
   | 2 => fix IH 7
@@ -117,7 +111,7 @@ Ltac ugly_fix_fix IH n :=
 
 Ltac ugly_fix_fix2 IH n :=
   (* we must destruct to allow the fix to reduce...*)
-  lazymatch eval cbn in n with
+  once lazymatch eval cbn in n with
     0 => fix IH 1
   | 1 => fix IH 5
   | 2 => fix IH 9
@@ -127,7 +121,7 @@ Ltac ugly_fix_fix2 IH n :=
   end.
  
 Ltac intro_to_assumed x :=
-  lazymatch goal with
+  once lazymatch goal with
     H : Lock _ |- _  =>
     let tx := type of x in
     revert x;unlock H;revert H;
@@ -136,7 +130,7 @@ Ltac intro_to_assumed x :=
   end.
 
 Ltac split_assumed :=
-  lazymatch goal with
+  once lazymatch goal with
     H : Lock _ |- _  =>
     unlock H;
     split;[eapply proj1 in H|eapply proj2 in H];lock H
@@ -144,37 +138,37 @@ Ltac split_assumed :=
 
 Ltac clean_assumed :=
   repeat
-    lazymatch goal with
+    once lazymatch goal with
       H : Lock (_/\_) |- ?G  =>
       unlock H; apply proj2 in H;lock H
     end.
 
 Ltac is_assumed_add :=
-  lazymatch goal with
+  once lazymatch goal with
     H : Lock _ |- ?G  =>
     unlock H; refine (proj1 H);shelve
   end.
 
 Ltac is_assumed :=
-  lazymatch goal with
+  once lazymatch goal with
     H : Lock _ |- ?G  =>
     unlock H; refine H;shelve
   end.
 
 Ltac close_assumed :=
-  lazymatch goal with
+  once lazymatch goal with
     H : Lock _ |- ?G  =>unlock H;assert True by exact H
   end.
 
 (* a non-recursive step*)
 Ltac cstep' extractSimp:=
   let x := fresh "x" in
-  lazymatch goal with
+  once lazymatch goal with
   | |- computes _ _ (match ?x with _ => _ end)=>
     let eq := fresh "eq" in destruct x eqn:eq
   | |- computes (TyArr ?tt1 ?tt2) ?f ?intF=>
     let fRep := constr:(ltac:(quote_term f (fun x => exact x))) in
-    lazymatch fRep with
+    once lazymatch fRep with
       (* a potentially recursive step *)
       Ast.tFix (_::_::_) => fail 1000 "mutual recursion not supported"
     | Ast.tFix [BasicAst.mkdef _ _ _(*<-dtype*) _(*<-dbody*) ?recArg(*<-recArg*)] 0 =>
@@ -183,17 +177,17 @@ Ltac cstep' extractSimp:=
       eapply computesExpStart;[solve [Lproc]|];
       let n:= (eval cbn in (S recArg)) in
       let rec step n:=
-          (lazymatch n with
+          (once lazymatch n with
            |  S ?n =>
               eexists;
-              eapply computesExpStep;[try recStep P;extractSimp idtac;shelveIfUnsolved "pos5"|Lproc;shelveIfUnsolved "pos6"|];
+              eapply computesExpStep;[try recStep P;extractSimp;shelveIfUnsolved "pos5"|Lproc;shelveIfUnsolved "pos6"|];
               (*simple notypeclasses refine (_:computes (_ ~> _) _ _ (fun x xInt xNorm => (_,_)));try exact tt;shelve_unifiable;*)
               let x := fresh "x" in  
               let xInt := fresh x "Int" in
               let xInts := fresh x "Ints" in
               intros x xInt xInts;
               change xInt with (@ext _ _ x (Build_computable xInts));
-              lazymatch type of xInts with
+              once lazymatch type of xInts with
                 computes (@TyB _ ?reg) _ _ =>
                 rewrite (ext_is_enc (Build_computable xInts)) in *;
                 clear xInt xInts;assert (xInt:True) by constructor; assert (xInts:True) by constructor
@@ -207,13 +201,13 @@ Ltac cstep' extractSimp:=
         let IH := fresh "IH" P in
         ugly_fix_fix IH recArg;
           let rec loop n := (* destruct the struct-recursive argument*)
-              lazymatch n with
+              once lazymatch n with
                 0 => intros [] ? ?
               | S ?n' => intros ? ? ?;loop n'
               end in
           loop recArg;
           eexists;
-          (split;[try recStep P;extractSimp idtac;shelveIfUnsolved "pos7"|]))
+          (split;[try recStepNew P;extractSimp;shelveIfUnsolved "pos7"|]))
 
     (* a non-recursive function *)
     | _=>
@@ -225,12 +219,12 @@ Ltac cstep' extractSimp:=
       eapply computesTyArr;[try Lproc;shelveIfUnsolved "pos1"|idtac];
       intros x xInt xInts;
       change xInt with (@ext _ _ x (Build_computable xInts));
-      lazymatch tt1 with
+      once lazymatch tt1 with
         TyB _ => rewrite (ext_is_enc (Build_computable xInts)) in *;
                 clear xInt xInts;assert (xInt:True) by constructor; assert (xInts:True) by constructor
       | _ => idtac
       end;
-      eexists;split;[extractSimp idtac;shelveIfUnsolved "pos2" | intros vProc]
+      eexists;split;[extractSimp;shelveIfUnsolved "pos2" | intros vProc]
     end
 
   | |- computes (TyB _) _ ?t=> has_no_evar t;apply computesTyB
@@ -245,7 +239,7 @@ Ltac cstep' extractSimp:=
     let eq := fresh "eq" in destruct x eqn:eq
   | H:Lock _ |- computesTime (TyArr ?tt1 ?tt2) ?f ?intF ?T=>
     let fRep := constr:(ltac:(quote_term f (fun x => exact x))) in
-    lazymatch fRep with
+    once lazymatch fRep with
       Ast.tFix (_::_::_) => fail 1000 "mutual recursion not supported"
     | Ast.tFix [BasicAst.mkdef _ _ _(*<-dtype*) _(*<-dbody*) ?recArg(*<-recArg*)] 0 =>
       let P := fresh "P" in
@@ -254,7 +248,7 @@ Ltac cstep' extractSimp:=
       eapply computesTimeExpStart;[solve [Lproc]|];
       let n:= (eval cbn in (S recArg)) in
       let rec step n:=
-          (lazymatch n with
+          (once lazymatch n with
            |  S ?n' =>
               eexists;
               let x := fresh "x" in  
@@ -262,12 +256,12 @@ Ltac cstep' extractSimp:=
               let xT := fresh x "T" in
               let xInts := fresh x "Ints" in
               (refine (computesTimeExpStep (fT:=fun x xT => _) _ _ _ _) ;
-               [|try recStepUnnamed;extractSimp idtac;shelveIfUnsolved "pos8"|Lproc;shelveIfUnsolved "pos9"|]);
+               [|try recStepNew P;extractSimp;shelveIfUnsolved "pos8"|Lproc;shelveIfUnsolved "pos9"|]);
               [try reflexivity;is_assumed_add|];clean_assumed;
               (*simple notypeclasses refine (_:computes (_ ~> _) _ _ (fun x xInt xNorm => (_,_)));try exact tt;shelve_unifiable;*) 
               intros x xInt xT; intro_to_assumed x;intro_to_assumed xT;intro xInts;
               change xInt with (@extT _ _ x _ (Build_computableTime xInts));
-              lazymatch type of xInts with
+              once lazymatch type of xInts with
                 computesTime (@TyB _ ?reg) _ _ _=>
                 rewrite (extT_is_enc (Build_computableTime xInts)) in *;
                 destruct xT;
@@ -291,14 +285,14 @@ Ltac cstep' extractSimp:=
              let txT := type of xT in
              unlock H; revert H;refine (_ : (forall (x:_) (xT:_) , (_ :Prop)) -> _ );
              intros H;specialize (H x xT);lock H;
-             lazymatch n with
+             once lazymatch n with
                0 => unlock H;revert H;(refine (_: ((fun z:tx => ltac:(destruct z):Prop) x) -> _);intros H;lock H);
                    eexists (ltac:(destruct x));destruct x;(split;unlock H;
                    [
-                     lazymatch goal with
+                     once lazymatch goal with
                        |- evalLe ?k _ _ =>
                        refine (le_evalLe_proper _ eq_refl eq_refl _);[refine (proj1 H);shelve|apply proj2 in H;lock H];
-                       try recStepUnnamed;extractSimp idtac;shelveIfUnsolved "pos10"
+                       try recStepNew P;extractSimp;shelveIfUnsolved "pos10"
                      end
                     |apply proj2 in H;lock H])
              | S ?n' => loop n'
@@ -318,12 +312,12 @@ Ltac cstep' extractSimp:=
       split_assumed;[now is_assumed|];
       intros xInt xInts;
       change xInt with (@extT _ _ x _ (Build_computableTime xInts));
-      lazymatch tt1 with
+      once lazymatch tt1 with
         TyB _ => rewrite (extT_is_enc (Build_computableTime xInts)) in *;
                 clear xInt xInts;assert (xInt:True) by constructor; assert (xInts:True) by constructor
       | _ => idtac
       end;
-      eexists;split;[extractSimp idtac;shelveIfUnsolved "pos4"| intros vProc]
+      eexists;split;[extractSimp;shelveIfUnsolved "pos4"| intros vProc]
     end
   (* complexity: *)
 
@@ -342,33 +336,36 @@ Ltac cstep' extractSimp:=
   end.
 
 Tactic Notation "progress'" tactic(t) :=
-  lazymatch goal with
+  once lazymatch goal with
     | |- ?R ?s _ =>idtac "now";print_goal;
     t tt;idtac"then";print_goal;
-    lazymatch goal with
+    once lazymatch goal with
       |- R s _ => fail "noprogress"
     | |- _ => idtac
     end
   end.
 
-Ltac extractCorrectCrush_new :=
-   Lrewrite_new;
-  repeat (progress (repeat Intern.destructRefine);Lrewrite_new);
+Ltac extractCorrectCrush :=
+  idtac;
+   try Lsimpl;try Lreflexivity;
+   try repeat' (repeat' Intern.destructRefine;Lsimpl;try Lreflexivity);
   try Lreflexivity.
 
-Ltac cstep := cstep' ltac:(fun _ => 
-                               lazymatch goal with
-                                 |- eval _ _ => extractCorrectCrush_new
-                               | |- evalLe _ _ _ => extractCorrectCrush_new
-                               | |- evalIn _ _ _ => Lsimpl;fail "evalIn does not support full Lrewrite and should only occur when simplifying rho/recursion"
-                               | |- ?G => idtac "cstep found unexpected" G 
-                               end;try (idtac;[idtac "could not simplify some occuring term, shelved instead"];shelve)).
-
-                           Ltac computable_match:=
-  intros;
+Ltac extractSimple := 
   lazymatch goal with
+    |- eval _ _ => extractCorrectCrush
+  | |- evalLe _ _ _ => extractCorrectCrush
+  | |- evalIn _ _ _ => Lsimpl_old;fail "evalIn does not support full Lrewrite and should only occur when simplifying rho/recursion"
+  | |- ?G => idtac "cstep found unexpected" G 
+  end;try (idtac;[idtac "could not simplify some occuring term, shelved instead"];shelve).
+
+Ltac cstep := cstep' extractSimple.
+
+Ltac computable_match:=
+  intros;
+  once lazymatch goal with
   | |- ?R ?lhs ?rhs =>
-    lazymatch lhs with 
+    once lazymatch lhs with 
     | context C [@enc _ ?reg ?x] =>
       induction x;
       let encf := (eval hnf in (@enc _ reg)) in
@@ -376,7 +373,7 @@ Ltac cstep := cstep' ltac:(fun _ =>
       cbn -[enc];
       repeat change encf with (@enc _ reg);
       fold_encs;
-      Lsimpl
+      Lsimpl_old
     end
   end.
 
@@ -399,14 +396,14 @@ Ltac computable_prepare t :=
   tryif is_const h then unfold h else idtac.
 
 Ltac computable_using_noProof Lter:=
-  lazymatch goal with
+  once lazymatch goal with
   | [ |- computable ?t ] =>
-    eexists Lter;unfold Lter;
+    eexists Lter;unfold Lter;try clear Lter;
     let t' := eval hnf in t in
         let h := visibleHead t' in
         try unfold h;computable_prepare t;infer_instances
   | [ |- computableTime ?t _] =>
-    eexists Lter;unfold Lter;
+    eexists Lter;unfold Lter;try clear Lter;
     let t' := (eval hnf in t) in
     let h := visibleHead t' in
     try unfold h; computable_prepare t; infer_instancesT
@@ -414,7 +411,7 @@ Ltac computable_using_noProof Lter:=
 
 
 Ltac extractAs s :=
-  lazymatch goal with
+  once lazymatch goal with
   | [ H : @extracted _ |- _ ] => idtac "WARNING: extraction is buggy if used while a term of type 'extracted _' is in Context"
   | [ |- computable ?t ] =>
     (run_template_program (tmExtract None t)
@@ -456,7 +453,7 @@ Tactic Notation "computable" "instead" open_constr(t) :=
   extractThis t s; computable using s.
       
 Tactic Notation "computable" "infer" :=
-  lazymatch goal with
+  once lazymatch goal with
   | [ |- computable ?t ] =>
     let e := constr:(int_ext t) in let e' := eval unfold int_ext in e in computable using e'
   | [ |- computableTime ?t _] =>
@@ -464,13 +461,14 @@ Tactic Notation "computable" "infer" :=
   end.
 
 Tactic Notation "extract" :=
+  unshelve
     let term := fresh "used_term" in
     extractAs term;computable using term.
 
 
 Tactic Notation "extract" "constructor":=
   let term := fresh "used_term" in
-        lazymatch goal with
+        once lazymatch goal with
         | [ |- computable ?t ] =>
           run_template_program (tmExtractConstr' None t)
                                  (fun e =>  pose (term:= ( e : extracted t)); computable using term)
@@ -482,34 +480,39 @@ Tactic Notation "extract" "constructor":=
 
 Tactic Notation "extract" "match" := computable_match.
 
-(** recRel_simplify *)
+(* recRel_simplify *)
 Lemma recRel_prettify_drop A B C:
   (A -> B) -> (A -> (C -> B)).
+Proof.
   tauto.
 Qed.
 
 Lemma recRel_prettify_forall X (P Q : X -> Prop) :
   (forall x, Q x -> P x) -> ((forall x, Q x) -> (forall x, P x)).
+Proof.
   firstorder.
 Qed.
 
 Lemma recRel_prettify_conj (P P' Q Q' : Prop) :
   (P-> P') -> (Q -> Q') -> (P /\ Q -> P' /\ Q').
+Proof.
   firstorder.
 Qed.
 
 Lemma recRel_prettify_conj_drop_r (P P' Q' : Prop) :
   Q' -> (P-> P') -> (P -> (P' /\ Q')).
+Proof.
   firstorder.
 Qed.
 
 Lemma recRel_prettify_rel X R (x x' y y' : X):
   x = x' -> y = y' -> (R x' y' -> R x y).
+Proof.
   firstorder congruence.
 Qed.
 
 Ltac recRel_ring_simplify_arith_enterRel :=
-  lazymatch goal with
+  once lazymatch goal with
     |- _ -> ?R ?x ?y =>
     let X := type of x in
     let x' := fresh "x'" in
@@ -521,7 +524,7 @@ Ltac recRel_ring_simplify_arith_enterRel :=
 
 Ltac recRel_prettify_arith_step :=
   progress
-    lazymatch goal with
+    once lazymatch goal with
     (*| |- _ -> (True -> _) =>
       refine (@recRel_prettify_drop _ _ _ _)
     | |- _ -> (_ /\ True) =>
@@ -536,10 +539,10 @@ Ltac recRel_prettify_arith_step :=
       let t := type of x in
       refine (_:(((fun y : t => ltac:(destruct y)) x : Prop) -> _));
 
-      lazymatch t with
+      once lazymatch t with
         nat => destruct x;
             [(* workarround to remove 0 from the context of the evar as this gets generalized in an ugly way*)
-            lazymatch goal with
+            once lazymatch goal with
               |- ?G -> _ =>
               let H := fresh in
               pose G as H; instantiate (1:=ltac:(clear x)) in (value of H); subst H
@@ -553,10 +556,10 @@ Ltac recRel_prettify_arith_step :=
       let t := type of x in
       refine (_:(_ = ((fun y : t => ltac:(destruct y)) x)));
 
-      lazymatch t with
+      once lazymatch t with
         nat => destruct x;
             [(* workarround to remove 0 from the context of the evar as this gets generalized in an ugly way*)
-            lazymatch goal with
+            once lazymatch goal with
               |- _ = ?G =>
               let H := fresh in
               pose G as H; instantiate (1:=ltac:(clear x)) in (value of H); subst H
@@ -565,7 +568,7 @@ Ltac recRel_prettify_arith_step :=
       end
     | |- ?x = ?evar =>
       ring_simplify x;
-      let rec patternMatches:= lazymatch goal with
+      let rec patternMatches:= once lazymatch goal with
                                  |- context C [match _ with _ => _ end] =>
                                  let C' := constr:(fun y => ltac:(let C' := context C[y] in exact C')) in
                                  refine (@eq_rect _ _ C' _ _ _);[patternMatches|symmetry]
@@ -620,8 +623,8 @@ Lemma cast_computableTime X Y `{registered Y} (cast : X -> Y) (Hc : injective ca
 Proof.
   cbn.
   pose (t:=lam 0).
-  computable using t. solverec.
-Defined.
+  computable using t. solverec. Unshelve.
+Defined. (* because ? *)
 
 
 Ltac computable_casted_result :=

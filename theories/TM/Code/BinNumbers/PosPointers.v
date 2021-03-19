@@ -1,6 +1,6 @@
-(** * Pointer bookkeeping for machines using (positive) binary numbers *)
+(* * Pointer bookkeeping for machines using (positive) binary numbers *)
 
-From Undecidability Require Import ProgrammingTools.
+From Undecidability.TM Require Import ProgrammingTools.
 From Undecidability Require Import BinNumbers.EncodeBinNumbers.
 From Undecidability Require Import BinNumbers.PosDefinitions.
 
@@ -104,7 +104,7 @@ Proof.
 Qed.
 
 
-(** *** Extensionality lemma and tactics *)
+(* *** Extensionality lemma and tactics *)
 
 Lemma atBit_ext (t : tape sigPos^+) (p0 : positive) (b0 : bool) (bits0 : list bool) (p1 : positive) (b1 : bool) (bits1 : list bool) :
   atBit t p0 b0 bits0 ->
@@ -128,7 +128,7 @@ Lemma atHSB_ext (t : tape sigPos^+) (p0 : positive) (p1 : positive) :
 Proof. now intros H ->. Qed.
 
 Ltac atBit_ext :=
-  lazymatch goal with
+  once lazymatch goal with
   | [ H : atBit ?t ?p0 ?b0 ?bits0 |- atBit ?t ?p1 ?b1 ?bits0 ] => apply (atBit_ext H); auto
   | [ H : atLSB ?t ?p0 ?b0        |- atLSB ?t ?p1 ?b1        ] => apply (atLSB_ext H); auto
   | [ H : atHSB ?t ?p0            |- atHSB ?t ?p1            ] => apply (atHSB_ext H); auto
