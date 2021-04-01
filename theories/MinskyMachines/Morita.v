@@ -5,23 +5,58 @@ Require Import List Lia.
 
 Set Implicit Arguments.
 
-(** * Morita's k-Counter Machine
 
-    5 type of instructions ("quadruples")
+Section Vector_Facts.
 
-    1/ INC x i j : from i, increment register x by 1 and jump to j
-    2/ DEC x i j : from i, decrement register x by 1 and jump to j
-    3/ NOP x i j : from i, jump to j leaving x unchanged
-    4/ ZER x i j : from i, jump to j if x = 0
-    5/ POS x i j : from i, jump to j if x > 0
- *)
+  Variable (n : nat).
 
-Inductive instr : Set := INC | DEC | NOP | ZER | POS.
+  Local Notation "v #> i" := (vec_pos v i).
+  Local Notation "v [ w / i ]" := (vec_change v i w).
 
-(* We use a, b, c to range over quadruples and i, j to range over counters *)
-Definition quad (I : Set) : Set := (nat * I * instr * nat).
+  Lemma vec_eq_pos (v w : vec nat n) : v = w -> (forall p, v#>p = w#>p).
+  Proof.
+    intros H. now rewrite H.
+  Qed.
+
+  Lemma vec_plus_inj (v w x : vec nat n) : vec_plus v w = vec_plus v x -> x = w.
+  Proof.
+    intros H. apply vec_pos_ext. intros p.
+    apply vec_eq_pos with (p:=p) in H. do 2 rewrite vec_pos_plus in H. lia.
+  Qed.
+
+  Lemma vec_pos_change i (v w : vec nat n) x y :
+    v[x/i] = w[y/i] -> v#>i = S x -> w#>i = S y -> v = w.
+  Proof.
+    intros. apply vec_pos_ext. intros p.
+    assert (pdec : { i = p } + { i <> p }).
+    - apply pos_eq_dec.
+    - destruct pdec as [ pdec | pdec ]; subst; apply vec_eq_pos with (p:=p) in H.
+      + do 2 rewrite vec_change_eq in H; try reflexivity.
+        subst. now rewrite H1, H0.
+      + do 2 rewrite vec_change_neq in H; try exact pdec.
+        exact H.
+  Qed.
+
+End Vector_Facts.
+
 
 Section Morita_CM.
+
+  (** * Morita's k-Counter Machine
+
+      5 type of instructions ("quadruples")
+
+      1/ INC x i j : from i, increment register x by 1 and jump to j
+      2/ DEC x i j : from i, decrement register x by 1 and jump to j
+      3/ NOP x i j : from i, jump to j leaving x unchanged
+      4/ ZER x i j : from i, jump to j if x = 0
+      5/ POS x i j : from i, jump to j if x > 0
+  *)
+
+  Inductive instr : Set := INC | DEC | NOP | ZER | POS.
+
+  (* quadruples and reduced quadruples *)
+  Definition quad (I : Set) : Set := (nat * I * instr * nat).
 
   (* Number of counters *)
   Variable (k : nat).
@@ -47,19 +82,42 @@ Section Morita_CM.
 
 End Morita_CM.
 
-Definition left_uniq {A B : Type} (R : A -> B -> Prop) :=
-  forall x y z, R x z -> R y z -> x = y.
 
-Definition right_uniq {A B : Type} (R : A -> B -> Prop) :=
-  forall x y z, R x y -> R x z -> y = z.
+Section Morita_Facts.
 
-Section Intensional_extensional.
+  Import ListNotations.
 
-  (* Number of counters *)
   Variable (k : nat).
 
-  (* Overlap in domain *)
-  Inductive dom_overlap : quad (pos k) -> quad (pos k) -> Prop :=
+  Lemma cm_const p i (T : list (quad (pos (S k)))) :
+    (forall a, In a T -> (a = (p,i,ZER,p) \/ a = (p,i,POS,p) \/ a = (p,i,NOP,p)))
+              -> forall s t, cm_sss T s t -> s = t.
+  Proof.
+    intros H (p1,v1) (p2,v2) Hcm. inversion Hcm; subst.
+    destruct (H a H0) as [H2|[H2|H2]]; rewrite H2 in H1; now inversion H1.
+  Qed.
+
+  Lemma config_eq_dec (s t : config k) : { s = t } + { s <> t }.
+  Proof.
+    decide equality.
+    - apply (Vector.eq_dec _ Nat.eqb), PeanoNat.Nat.eqb_eq.
+    - decide equality.
+  Qed.
+
+End Morita_Facts.
+
+
+Section Determinism.
+
+  Import ListNotations.
+
+  Variables (k : nat).
+
+  Local Notation "v #> i" := (vec_pos v i).
+  Local Notation "v [ w / i ]" := (vec_change v i w).
+
+  (* Morita's notion of domain overlap for quadruples *)
+  Inductive dom_overlap : quad (pos (S k)) -> quad (pos (S k)) -> Prop :=
   | dom_overlap_ctr p i1 i2 x1 x2 q1 q2 :
       i1 <> i2 -> dom_overlap (p,i1,x1,q1) (p,i2,x2,q2)
   | dom_overlap_instr p i1 i2 x q1 q2   :
@@ -77,8 +135,62 @@ Section Intensional_extensional.
   | dom_overlap_nop_2 p i1 i2 x q1 q2   :
       dom_overlap (p,i1,x,q1) (p,i2,NOP,q2).
 
+  (* Morita's notion of determinism *)
+  Definition det_int (T : list (quad (pos (S k)))) :=
+    forall a b, In a T -> In b T -> a <> b -> ~ dom_overlap a b.
+
+  (* Extensional determinism *)
+  Definition det_ext (T : list (quad (pos (S k)))) :=
+    forall s t u, cm_sss T s t -> cm_sss T s u -> t = u.
+
+  Lemma det_int_sound T : det_int T -> det_ext T.
+  Proof.
+    intros det_int s t u Hst Hsu.
+    assert (Hdec : { t = u } + { t <> u }).
+    - apply config_eq_dec.
+    - destruct Hdec as [Hdec | Hdec].
+      + exact Hdec.
+      + exfalso. destruct Hst, Hsu.
+        apply det_int with (a:=a) (b:=a0); auto.
+        * intros H3. apply Hdec.
+          destruct H0; subst; inversion H2; subst; try reflexivity.
+          revert H8. rewrite H0. intros [=]. now rewrite H3.
+        * destruct H0; subst; inversion H2; subst; try eauto using dom_overlap.
+          -- apply dom_overlap_ctr. congruence.
+          -- apply dom_overlap_ctr. congruence.
+  Qed.
+
+  Fact det_int_refl_not : exists T, det_ext T /\ ~ det_int T.
+  Proof.
+    exists [(0,pos0,ZER,0); (0,pos0,POS,0); (0,pos0,NOP,0)].
+    split.
+    - intros s t u Hst Hsu.
+      apply cm_const with (p:=0) (i:=pos0) in Hst.
+      apply cm_const with (p:=0) (i:=pos0) in Hsu.
+      + now rewrite <- Hst, Hsu.
+      + firstorder.
+      + firstorder.
+    - intros H. specialize (H (0,pos0,ZER,0) (0,pos0,NOP,0)).
+      simpl in H. destruct H; auto.
+      + congruence.
+      + apply dom_overlap_nop_2.
+  Qed.
+
+End Determinism.
+
+
+Section Reversibility.
+
+  Import ListNotations.
+
+  (* Number of counters *)
+  Variable (k : nat).
+
+  Local Notation "v #> i" := (vec_pos v i).
+  Local Notation "v [ w / i ]" := (vec_change v i w).
+
   (* Overlap in range *)
-  Inductive ran_overlap : quad (pos k) -> quad (pos k) -> Prop :=
+  Inductive ran_overlap : quad (pos (S k)) -> quad (pos (S k)) -> Prop :=
   | ran_overlap_ctr p1 p2 i1 i2 x1 x2 q :
       i1 <> i2 -> ran_overlap (p1,i1,x1,q) (p2,i2,x2,q)
   | ran_overlap_instr p1 p2 i1 i2 x q   :
@@ -96,105 +208,46 @@ Section Intensional_extensional.
   | ran_overlap_nop_2 p1 p2 i1 i2 x q   :
       ran_overlap (p1,i1,x,q) (p2,i2,NOP,q).
 
-  (* Morita's intensional notions of determinism and reversibility *)
-  Definition ex_dom_overlap (T : list (quad (pos k))) :=
-    exists a b, In a T /\ In b T /\ a <> b /\ dom_overlap a b.
-
-  Definition intensional_determinism (T : list (quad (pos k))) :=
-    forall a b, In a T -> In b T -> a <> b -> ~ dom_overlap a b.
-
-  Definition ex_ran_overlap (T : list (quad (pos k))) :=
-    exists a b, In a T /\ In b T /\ a <> b /\ ran_overlap a b.
-
-  Definition intensional_reversibility (T : list (quad (pos k))) :=
+  (* Morita's notion of intensional reversibility *)
+  Definition rev_int (T : list (quad (pos (S k)))) :=
     forall a b, In a T -> In b T -> a <> b -> ~ ran_overlap a b.
 
-  (* Extensional notions of determinism and reversibility *)
-  Definition extensional_determinism (T : list (quad (pos k))) := right_uniq (cm_sss T).
+  (* Extensional reversibility *)
+  Definition rev_ext (T : list (quad (pos (S k)))) :=
+    forall s t u, cm_sss T s u -> cm_sss T t u -> s = t.
 
-  Definition extensional_reversibility (T : list (quad (pos k))) := left_uniq (cm_sss T).
-
-  Lemma intensional_determinism_implies_extensional_determinism (T : list (quad (pos k))) :
-    intensional_determinism T -> extensional_determinism T.
-  Admitted.
-
-  Lemma vec_plus_inj n (v w x : vec nat n) : vec_plus x v = vec_plus x w -> v = w.
-  Admitted.
-
-  Lemma intensional_reversibility_implies_extensional_reversibility (T : list (quad (pos k))) :
-    intensional_reversibility T -> extensional_reversibility T.
+  Lemma rev_int_soundness (T : list (quad (pos (S k)))) : rev_int T -> rev_ext T.
   Proof.
-    (* unfold intensional_reversibility, extensional_reversibility. intros H. *)
-    (* unfold left_uniq. intros s t u. *)
-    (* assert (Hdec: { s = t } + { s <> t }). *)
-    (* - decide equality. *)
-    (*   + apply (Vector.eq_dec _ Nat.eqb), PeanoNat.Nat.eqb_eq. *)
-    (*   + decide equality. *)
-    (* - destruct Hdec. *)
-    (*   + now intros. *)
-    (*   + intros. exfalso. destruct H0, H1. eapply H. *)
-    (*     * exact H0. *)
-    (*     * exact H1. *)
-    (*     * intros Hneq. subst. apply n. inversion H2; subst; inversion H3; subst. *)
-    (*       -- do 2 rewrite vec_change_succ in H9. *)
-    (*          apply vec_plus_inj in H9. now rewrite H9. *)
-    (*       -- apply vec_change_pred in H4. apply vec_change_pred in H9. *)
-    (*          rewrite H4 in H10. rewrite H9 in H10. *)
-    (*          rewrite vec_change_succ in H10. *)
-    (*          simpl in H10. *)
-    (*          simpl. *)
-    (*          rewrite vec_change_succ in H10. apply pair_equal_spec in H8 as [H8 H9]. subst. *)
-    (*          apply pair_equal_spec in H8 as [_ H9]. *)
-    (*          exfalso. discriminate H9. *)
-    (*       -- apply pair_equal_spec in H7 as [H7 _]. *)
-    (*          apply pair_equal_spec in H7 as [_ H10]. *)
-    (*          exfalso. discriminate H10. *)
-    (*       -- apply pair_equal_spec in H8 as [H8 H9]. subst. *)
-    (*          apply pair_equal_spec in H8 as [_ H11]. *)
-    (*          exfalso. discriminate H11. *)
-    (*       -- apply pair_equal_spec in H8 as [H8 H9]. subst. *)
-    (*          apply pair_equal_spec in H8 as [_ H11]. *)
-    (*          exfalso. discriminate H11. *)
-    Admitted.
+    intros rev_int s t u Hsu Htu.
+    assert (Hdec : { s = t } + { s <> t }).
+    - apply config_eq_dec.
+    - destruct Hdec as [Hdec | Hdec].
+      + exact Hdec.
+      + exfalso. destruct Hsu, Htu. apply rev_int with (a:=a) (b:=a0); auto.
+        * intros H3. apply Hdec.
+          destruct H0; subst; inversion H2; subst; try reflexivity.
+          -- revert H7. do 2 rewrite vec_change_succ.
+             intros H7. apply vec_plus_inj in H7. now rewrite H7.
+          -- f_equal. apply vec_pos_change with (i:=i) (x:=w) (y:=w0); auto.
+        * destruct H0; subst; inversion H2; subst; try eauto using ran_overlap.
+          -- apply ran_overlap_ctr. congruence.
+          -- apply ran_overlap_ctr. congruence.
+  Qed.
 
-  (* Computes a "normal" Morita CM that is equivalent to the given Morita CM
-     but satisfies Morita's notions of determinism.
+  Lemma rev_int_refl_not : exists T, rev_ext T /\ ~ rev_int T.
+  Proof.
+    exists [(0,pos0,ZER,0); (0,pos0,POS,0); (0,pos0,NOP,0)].
+    split.
+    - intros (p1,v1) (p2,v2) (p3,v3) Hsu Htu.
+      apply cm_const with (p:=0) (i:=pos0) in Hsu.
+      apply cm_const with (p:=0) (i:=pos0) in Htu.
+      + now rewrite Hsu, Htu.
+      + firstorder.
+      + firstorder.
+    - intros H. specialize (H (0,pos0,ZER,0) (0,pos0,NOP,0)).
+      simpl in H. destruct H; auto.
+      + congruence.
+      + apply ran_overlap_nop_2.
+  Qed.
 
-     IDEA:
-     Perhaps some notions of "redundant" quadruples?
-     That is, deterministic CMs with overlaps contain quadruples
-     in the form of (p,i,ZER,q) for some p, i, q.
-   *)
-  Lemma normal_morita_determinism (T : list (quad (pos k))) :
-    extensional_determinism T -> ex_dom_overlap T ->
-      exists M, forall x y, cm_sss T x y <-> cm_sss M x y /\ intensional_determinism M.
-  Admitted.
-
-  (* Computes a "normal" Morita CM that is equivalent to the given Morita CM
-     but satisfies Morita's notions of reversibility.
-   *)
-  Lemma normal_morita_reversibility (T : list (quad (pos k))) :
-    extensional_reversibility T -> ex_ran_overlap T ->
-      exists M, forall x y, cm_sss T x y <-> cm_sss M x y /\ intensional_reversibility M.
-  Admitted.
-
-End Intensional_extensional.
-
-Section Morita_CM_problems.
-
-  Notation "P // s ~~> t" := (sss_output (@quad_sss _) P s t).
-  Notation "P // s ↓" := (sss_terminates (@quad_sss _) P s).
-
-  (* The set of states is implicit from T *)
-  Definition MORITA_CM :=
-    { k : nat & { q0 : nat & { qf : nat & { T : list (quad (pos k)) & vec nat k } } } }.
-
-  Definition MORITA_CM_HALTS_ON_ZERO (M : MORITA_CM) :=
-    match M with existT _ k (existT _ q0 (existT _ qf (existT _ T v)))
-                 => (q0,T) // (q0,v) ~~> (qf,vec_zero) end.
-
-  Definition MORITA_CM_HALTING (M : MORITA_CM) :=
-    match M with existT _ k (existT _ q0 (existT _ qf (existT _ T v)))
-                 => (q0,T) // (q0, v) ↓ end.
-
-End Morita_CM_problems.
+End Reversibility.
