@@ -47,11 +47,3 @@ Proof.
   apply (undecidability_from_reducibility H10SQC_SAT_undec).
   exact H10SQC_SAT_to_H10UC_SAT.reduction.
 Qed.
-
-Check H10UC_SAT_undec.
-
-Theorem H10SC_SAT_undec : undecidable H10SC_SAT.
-Proof.
-  apply (undecidability_from_reducibility H10C_SAT_undec).
-  exact H10C_SAT_to_H10SC_SAT.reduction.
-Qed.
