@@ -9,6 +9,7 @@
 
 (* Certified Undecidability of Intuitionistic Linear Logic via Binary Stack Machines and Minsky Machines. Yannick Forster and Dominique Larchey-Wendling. CPP '19. http://uds-psl.github.io/ill-undecidability/ *)
 
+From Coq Require Import List.
 From Undecidability.Shared.Libs.DLW
   Require Import Vec.pos Vec.vec Code.sss.
 
@@ -108,6 +109,23 @@ Section MMA_problems.
 
   Definition MMA2_HALTS_ON_ZERO := @MMA_HALTS_ON_ZERO 2.
   Definition MMA2_HALTING := @MMA_HALTING 2.
+
+  Notation "i // s -1> t" := (mma_sss i s t).
+  Definition mma_instr_reversible {n} (i : mm_instr (pos n)) :=
+    forall s t u, i // s -1> u -> i // t -1> u -> s = t.
+  Definition mma_reversible {n} (P : list (mm_instr (pos n))) :=
+    Forall (@mma_instr_reversible n) P.
+
+  Definition MMA_REVERSIBLE_PROBLEM n :=
+    @sigT (MMA_PROBLEM n) (fun P => mma_reversible (fst P)).
+  Definition MMA_REVERSIBLE_HALTS_ON_ZERO {n} (P : MMA_REVERSIBLE_PROBLEM n) :=
+    (1,fst (projT1 P)) // (1,snd (projT1 P)) ~~> (0,vec_zero).
+  Definition MMA_REVERSIBLE_HALTING {n} (P : MMA_REVERSIBLE_PROBLEM n) :=
+    (1,fst (projT1 P)) // (1,snd (projT1 P)) ↓.
+
+  Definition MMA2_REVERSIBLE_PROBLEM := MMA_REVERSIBLE_PROBLEM 2.
+  Definition MMA2_REVERSIBLE_HALTS_ON_ZERO := @MMA_REVERSIBLE_HALTS_ON_ZERO 2.
+  Definition MMA2_REVERSIBLE_HALTING := @MMA_REVERSIBLE_HALTING 2.
 
 End MMA_problems.
 
